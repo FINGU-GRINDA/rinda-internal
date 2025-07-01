@@ -16,12 +16,18 @@
     "db:push": "turbo -F server db:push",
     "db:studio": "turbo -F server db:studio",
     "db:generate": "turbo -F server db:generate",
-    "db:migrate": "turbo -F server db:migrate"
+    "db:migrate": "turbo -F server db:migrate",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
-  "dependencies": {},
   "devDependencies": {
-    "turbo": "^2.5.4",
-    "@biomejs/biome": "^2.0.0"
+    "@biomejs/biome": "^2.0.0",
+    "@playwright/test": "^1.53.2",
+    "playwright": "^1.53.2",
+    "turbo": "^2.5.4"
   },
   "packageManager": "npm@10.9.2"
 }
