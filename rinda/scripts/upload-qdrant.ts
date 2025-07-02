@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import pRetry from "p-retry";
 import { v5 as uuidV5 } from "uuid";
 import z from "zod/v4";
 import { processCsvInBatches } from "./process-csv-streaming";
@@ -209,9 +210,33 @@ const embedCSV = async (params: { csvPath: string }) => {
 				// Step 2: Create embeddings for the batch
 				const embeddingStartTime = performance.now();
 				const documents = batch.map((person) => JSON.stringify(person));
-				const embeddings = await createDocumentEmbedding({ documents });
+				let retryCount = 0;
+				const embeddings = await pRetry(
+					async () => {
+						if (retryCount > 0) {
+							console.log(
+								`    🔄 Retry attempt ${retryCount} for embedding creation...`,
+							);
+						}
+						retryCount++;
+						return await createDocumentEmbedding({ documents });
+					},
+					{
+						retries: 3,
+						onFailedAttempt: (error) => {
+							console.log(
+								`    ⚠️  Embedding attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
+							);
+						},
+						minTimeout: 1000,
+						maxTimeout: 5000,
+						factor: 2,
+					},
+				);
 				const embeddingTime = performance.now() - embeddingStartTime;
-				console.log(`    ⏱️  Embedding creation: ${embeddingTime.toFixed(2)}ms`);
+				console.log(
+					`    ⏱️  Embedding creation: ${embeddingTime.toFixed(2)}ms${retryCount > 1 ? ` (${retryCount} attempts)` : ""}`,
+				);
 
 				// Step 3: Prepare points for batch upload
 				const points = batchData.map((data, index) => ({
@@ -222,12 +247,36 @@ const embedCSV = async (params: { csvPath: string }) => {
 
 				// Step 4: Upload batch to Qdrant
 				const upsertStartTime = performance.now();
-				await client.upsert(COLLECTION_NAME, {
-					points,
-					wait: false,
-				});
+				let upsertRetryCount = 0;
+				await pRetry(
+					async () => {
+						if (upsertRetryCount > 0) {
+							console.log(
+								`    🔄 Retry attempt ${upsertRetryCount} for Qdrant upsert...`,
+							);
+						}
+						upsertRetryCount++;
+						return await client.upsert(COLLECTION_NAME, {
+							points,
+							wait: false,
+						});
+					},
+					{
+						retries: 3,
+						onFailedAttempt: (error) => {
+							console.log(
+								`    ⚠️  Qdrant upsert attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
+							);
+						},
+						minTimeout: 1000,
+						maxTimeout: 5000,
+						factor: 2,
+					},
+				);
 				const upsertTime = performance.now() - upsertStartTime;
-				console.log(`    ⏱️  Qdrant upsert: ${upsertTime.toFixed(2)}ms`);
+				console.log(
+					`    ⏱️  Qdrant upsert: ${upsertTime.toFixed(2)}ms${upsertRetryCount > 1 ? ` (${upsertRetryCount} attempts)` : ""}`,
+				);
 
 				processedRecords += batch.length;
 				console.log(`    ✅ Batch ${batchIndex + 1} uploaded successfully`);
@@ -371,24 +420,45 @@ const createDocumentEmbedding = async (params: {
 		throw error;
 	}
 };
-
 const main = async () => {
 	// create collection
 	await createCollection();
 
 	// list all csv files
 	const csvPaths = await listCsvPath({ folderPath: CSV_PATH });
+	const totalFiles = csvPaths.length;
+	let processedFiles = 0;
+	let skippedFiles = 0;
+
+	console.log(`Total CSV files found: ${totalFiles}`);
 
 	for (const csvPath of csvPaths) {
 		const isUploaded = await isFileCheckpointed(csvPath);
 		if (isUploaded) {
+			skippedFiles++;
+			console.log(
+				`[${processedFiles + skippedFiles}/${totalFiles}] Skipping already uploaded: ${csvPath}`,
+			);
 			continue;
 		}
+
+		processedFiles++;
+		const remainingFiles = totalFiles - processedFiles - skippedFiles;
+		console.log(
+			`[${processedFiles + skippedFiles}/${totalFiles}] Processing: ${csvPath} (${remainingFiles} remaining)`,
+		);
+
 		await embedCSV({ csvPath });
 
 		// checkpoint
 		await checkpointFile(csvPath);
+		console.log(`✓ Successfully uploaded: ${csvPath}`);
 	}
+
+	console.log(`\nProcessing complete!`);
+	console.log(`- Total files: ${totalFiles}`);
+	console.log(`- Newly processed: ${processedFiles}`);
+	console.log(`- Already uploaded: ${skippedFiles}`);
 
 	// index after bulk upload
 	await indexQdrant();

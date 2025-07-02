@@ -1,8 +1,8 @@
 import os from "node:os";
 import path from "node:path";
-import { generatePersonUUID, PeopleSchema } from "./upload-qdrant";
+import type { z } from "zod/v4";
 import { processCsvInBatches } from "./process-csv-streaming";
-import { z } from "zod/v4";
+import { generatePersonUUID, type PeopleSchema } from "./upload-qdrant";
 
 const testUUIDDeduplication = async () => {
 	console.log("🧪 Testing UUID Deduplication...\n");
@@ -46,26 +46,32 @@ const testUUIDDeduplication = async () => {
 			inferred_salary: "",
 			years_experience: "",
 			countries: "USA",
-			interests: ""
+			interests: "",
 		};
 
 		const uuid1 = generatePersonUUID(testPerson);
 		const uuid2 = generatePersonUUID(testPerson);
-		
+
 		if (uuid1 === uuid2) {
 			console.log(`✅ Same person generates same UUID: ${uuid1}\n`);
 		} else {
-			console.log(`❌ Same person generated different UUIDs: ${uuid1} vs ${uuid2}\n`);
+			console.log(
+				`❌ Same person generated different UUIDs: ${uuid1} vs ${uuid2}\n`,
+			);
 		}
 
 		// Test 2: Email-based UUID generation
 		console.log("Test 2: Testing email-based UUID generation...");
 		const personWithEmail = { ...testPerson, emails: "unique@example.com" };
-		const personWithSameEmail = { ...testPerson, full_name: "Different Name", emails: "unique@example.com" };
-		
+		const personWithSameEmail = {
+			...testPerson,
+			full_name: "Different Name",
+			emails: "unique@example.com",
+		};
+
 		const uuidEmail1 = generatePersonUUID(personWithEmail);
 		const uuidEmail2 = generatePersonUUID(personWithSameEmail);
-		
+
 		if (uuidEmail1 === uuidEmail2) {
 			console.log(`✅ Same email generates same UUID regardless of name\n`);
 		} else {
@@ -76,10 +82,10 @@ const testUUIDDeduplication = async () => {
 		console.log("Test 3: Testing fallback identifier (no email)...");
 		const personNoEmail = { ...testPerson, emails: "" };
 		const personNoEmailCopy = { ...testPerson, emails: "" };
-		
+
 		const uuidNoEmail1 = generatePersonUUID(personNoEmail);
 		const uuidNoEmail2 = generatePersonUUID(personNoEmailCopy);
-		
+
 		if (uuidNoEmail1 === uuidNoEmail2) {
 			console.log(`✅ Same name+location+company generates same UUID\n`);
 		} else {
@@ -87,13 +93,15 @@ const testUUIDDeduplication = async () => {
 		}
 
 		// Test 4: Different persons generate different UUIDs
-		console.log("Test 4: Testing different persons generate different UUIDs...");
+		console.log(
+			"Test 4: Testing different persons generate different UUIDs...",
+		);
 		const person1 = { ...testPerson, emails: "person1@example.com" };
 		const person2 = { ...testPerson, emails: "person2@example.com" };
-		
+
 		const uuidPerson1 = generatePersonUUID(person1);
 		const uuidPerson2 = generatePersonUUID(person2);
-		
+
 		if (uuidPerson1 !== uuidPerson2) {
 			console.log(`✅ Different persons generate different UUIDs\n`);
 		} else {
@@ -104,10 +112,10 @@ const testUUIDDeduplication = async () => {
 		console.log("Test 5: Testing case insensitive email handling...");
 		const lowerEmail = { ...testPerson, emails: "john@example.com" };
 		const upperEmail = { ...testPerson, emails: "JOHN@EXAMPLE.COM" };
-		
+
 		const uuidLower = generatePersonUUID(lowerEmail);
 		const uuidUpper = generatePersonUUID(upperEmail);
-		
+
 		if (uuidLower === uuidUpper) {
 			console.log(`✅ Email comparison is case insensitive\n`);
 		} else {
@@ -116,14 +124,22 @@ const testUUIDDeduplication = async () => {
 
 		// Test 6: Real CSV data deduplication on Cambodia.csv only
 		console.log("Test 6: Testing deduplication on Cambodia.csv...");
-		
-		const csvPath = path.join(os.homedir(), "leads", "Cambodia", "Cambodia.csv");
+
+		const csvPath = path.join(
+			os.homedir(),
+			"leads",
+			"Cambodia",
+			"Cambodia.csv",
+		);
 		console.log(`\nProcessing ${csvPath}...`);
-		
+
 		// Use streaming to process CSV
-		const uuidMap = new Map<string, {count: number, records: z.infer<typeof PeopleSchema>[]}>();
+		const uuidMap = new Map<
+			string,
+			{ count: number; records: z.infer<typeof PeopleSchema>[] }
+		>();
 		let totalRecords = 0;
-		
+
 		await processCsvInBatches(
 			csvPath,
 			async (batch) => {
@@ -132,42 +148,47 @@ const testUUIDDeduplication = async () => {
 					totalRecords++;
 					const uuid = generatePersonUUID(record);
 					const existing = uuidMap.get(uuid);
-					
+
 					if (existing) {
 						existing.count++;
-						if (existing.records.length < 5) { // Only store first 5 examples
+						if (existing.records.length < 5) {
+							// Only store first 5 examples
 							existing.records.push(record);
 						}
 					} else {
-						uuidMap.set(uuid, {count: 1, records: [record]});
+						uuidMap.set(uuid, { count: 1, records: [record] });
 					}
 				});
 			},
 			{
 				batchSize: 1000,
-				maxConcurrency: 1
-			}
+				maxConcurrency: 1,
+			},
 		);
-		
+
 		console.log(`Total records: ${totalRecords}`);
-		
+
 		// Count duplicates
 		let totalDuplicates = 0;
-		const duplicateEntries: Array<[string, {count: number, records: z.infer<typeof PeopleSchema>[]}]> = [];
-		
+		const duplicateEntries: Array<
+			[string, { count: number; records: z.infer<typeof PeopleSchema>[] }]
+		> = [];
+
 		uuidMap.forEach((value, uuid) => {
 			if (value.count > 1) {
 				totalDuplicates += value.count - 1;
 				duplicateEntries.push([uuid, value]);
 			}
 		});
-		
+
 		console.log(`\n📊 Overall Statistics:`);
 		console.log(`Total records: ${totalRecords}`);
 		console.log(`Unique people (UUIDs): ${uuidMap.size}`);
 		console.log(`Duplicate records: ${totalDuplicates}`);
-		console.log(`Deduplication rate: ${((totalDuplicates / totalRecords) * 100).toFixed(2)}%`);
-		
+		console.log(
+			`Deduplication rate: ${((totalDuplicates / totalRecords) * 100).toFixed(2)}%`,
+		);
+
 		// Show some duplicate examples
 		console.log(`\n🔍 Sample duplicates (first 10):`);
 		duplicateEntries
@@ -177,12 +198,11 @@ const testUUIDDeduplication = async () => {
 				const first = data.records[0];
 				console.log(`\n  UUID: ${uuid.substring(0, 8)}...`);
 				console.log(`  Name: ${first.full_name}`);
-				console.log(`  Email: ${first.emails || '(no email)'}`);
+				console.log(`  Email: ${first.emails || "(no email)"}`);
 				console.log(`  Appears ${data.count} times`);
 			});
 
 		console.log("\n✨ All UUID deduplication tests completed!");
-
 	} catch (error) {
 		console.error("❌ Test failed:", error);
 		process.exit(1);
