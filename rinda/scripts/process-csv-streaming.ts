@@ -88,13 +88,14 @@ export const processCsvInBatches = async (
 						totalRows++;
 
 						try {
-							const transformedRow: Record<string, string> = {};
+							const transformedRow: Record<string, string | null> = {};
 
 							// Transform keys from CSV headers to schema keys
 							for (const [csvKey, value] of Object.entries(row)) {
 								const schemaKey = headerMapping[csvKey];
 								if (schemaKey) {
-									transformedRow[schemaKey] = String(value || "");
+									transformedRow[schemaKey] =
+										value != null ? String(value) : null;
 								}
 							}
 
@@ -112,7 +113,7 @@ export const processCsvInBatches = async (
 									(error) => {
 										console.error("Error flushing batch:", error);
 										resolveRow(); // Continue processing despite error
-									}
+									},
 								);
 							} else {
 								resolveRow();

@@ -175,12 +175,9 @@ export const listCsvPath = async (params: {
 export const generatePersonUUID = (
 	person: z.infer<typeof PeopleSchema>,
 ): string => {
-	// Create a unique identifier based on key fields that shouldn't change
-	// Using email as primary identifier, with fallback to name + location
-	const identifier =
-		person.emails ||
-		`${person.full_name}:${person.location}:${person.company_name}`;
-	return uuidV5(identifier.toLowerCase().trim(), PEOPLE_NAMESPACE);
+	// Create a unique identifier based on the entire person object
+	const identifier = JSON.stringify(person);
+	return uuidV5(identifier, PEOPLE_NAMESPACE);
 };
 
 const embedCSV = async (params: { csvPath: string }) => {
@@ -307,42 +304,42 @@ const embedCSV = async (params: { csvPath: string }) => {
 };
 
 export const PeopleSchema = z.object({
-	full_name: z.string(),
-	industry: z.string(),
-	job_title: z.string(),
-	sub_role: z.string(),
-	emails: z.string(),
-	mobile: z.string(),
-	phone_numbers: z.string(),
-	company_name: z.string(),
-	company_industry: z.string(),
-	company_website: z.string(),
-	company_size: z.string(),
-	location: z.string(),
-	skills: z.string(),
-	first_name: z.string(),
-	last_name: z.string(),
-	birth_year: z.string(),
-	birth_date: z.string(),
-	gender: z.string(),
-	linkedin_url: z.string(),
-	facebook_url: z.string(),
-	twitter_url: z.string(),
-	github_url: z.string(),
-	company_linkedin_url: z.string(),
-	company_facebook_url: z.string(),
-	company_twitter_url: z.string(),
-	company_location_name: z.string(),
-	company_location_street_address: z.string(),
-	company_location_address_line_2: z.string(),
-	company_location_postal_code: z.string(),
-	location_country: z.string(),
-	location_continent: z.string(),
-	linkedin_connections: z.string(),
-	inferred_salary: z.string(),
-	years_experience: z.string(),
-	countries: z.string(),
-	interests: z.string(),
+	full_name: z.string().nullable(),
+	industry: z.string().nullable(),
+	job_title: z.string().nullable(),
+	sub_role: z.string().nullable(),
+	emails: z.string().nullable(),
+	mobile: z.string().nullable(),
+	phone_numbers: z.string().nullable(),
+	company_name: z.string().nullable(),
+	company_industry: z.string().nullable(),
+	company_website: z.string().nullable(),
+	company_size: z.string().nullable(),
+	location: z.string().nullable(),
+	skills: z.string().nullable(),
+	first_name: z.string().nullable(),
+	last_name: z.string().nullable(),
+	birth_year: z.string().nullable(),
+	birth_date: z.string().nullable(),
+	gender: z.string().nullable(),
+	linkedin_url: z.string().nullable(),
+	facebook_url: z.string().nullable(),
+	twitter_url: z.string().nullable(),
+	github_url: z.string().nullable(),
+	company_linkedin_url: z.string().nullable(),
+	company_facebook_url: z.string().nullable(),
+	company_twitter_url: z.string().nullable(),
+	company_location_name: z.string().nullable(),
+	company_location_street_address: z.string().nullable(),
+	company_location_address_line_2: z.string().nullable(),
+	company_location_postal_code: z.string().nullable(),
+	location_country: z.string().nullable(),
+	location_continent: z.string().nullable(),
+	linkedin_connections: z.string().nullable(),
+	inferred_salary: z.string().nullable(),
+	years_experience: z.string().nullable(),
+	countries: z.string().nullable(),
+	interests: z.string().nullable(),
 });
 
 // Map CSV headers to schema keys
