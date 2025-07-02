@@ -94,8 +94,10 @@ export const processCsvInBatches = async (
 							for (const [csvKey, value] of Object.entries(row)) {
 								const schemaKey = headerMapping[csvKey];
 								if (schemaKey) {
+									// Convert empty strings to null, otherwise keep as string
+									const stringValue = value != null ? String(value) : null;
 									transformedRow[schemaKey] =
-										value != null ? String(value) : null;
+										stringValue === "" ? null : stringValue;
 								}
 							}
 
