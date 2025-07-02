@@ -10,8 +10,8 @@ import z from "zod/v4";
 import { processCsvInBatches } from "./process-csv-streaming";
 
 const BATCH_SIZE = 200;
-// Custom namespace for people records (must be a valid UUID)
-const PEOPLE_NAMESPACE = "people";
+// Custom namespace for people records (using predefined DNS namespace)
+const PEOPLE_NAMESPACE = uuidV5.DNS;
 const COLLECTION_NAME = "people";
 const CSV_PATH = path.join(os.homedir(), "leads");
 
