@@ -11,7 +11,7 @@ import { processCsvInBatches } from "./process-csv-streaming";
 
 const BATCH_SIZE = 200;
 // Custom namespace for people records (must be a valid UUID)
-const PEOPLE_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+const PEOPLE_NAMESPACE = "people";
 const COLLECTION_NAME = "people";
 const CSV_PATH = path.join(os.homedir(), "leads");
 
