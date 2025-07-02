@@ -1,0 +1,55 @@
+# Lefthook configuration for git hooks
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    biome-format:
+      glob: "*.{js,ts,jsx,tsx,json,md}"
+      exclude: |
+        node_modules/**/*
+        .turbo/**/*
+        dist/**/*
+        .next/**/*
+        out/**/*
+        build/**/*
+        apps/server/prisma/generated/**/*
+      run: npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+    
+    biome-lint:
+      glob: "*.{js,ts,jsx,tsx}"
+      exclude: |
+        node_modules/**/*
+        .turbo/**/*
+        dist/**/*
+        .next/**/*
+        out/**/*
+        build/**/*
+        apps/server/prisma/generated/**/*
+      run: npx biome lint --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  commands:
+    validate-commit-msg:
+      run: |
+        # Conventional commit pattern
+        pattern="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?!?: .{1,}$"
+        if ! grep -qE "$pattern" "$1"; then
+          echo "❌ Commit message doesn't follow conventional commits format!"
+          echo "📝 Format: <type>(<scope>): <subject>"
+          echo "📚 Example: feat(auth): add login functionality"
+          echo ""
+          echo "Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+          exit 1
+        fi
+
+pre-push:
+  parallel: true
+  commands:
+    check-types:
+      run: npm run check-types
+    
+    biome-check:
+      run: npm run check

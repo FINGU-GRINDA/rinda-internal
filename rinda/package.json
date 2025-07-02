@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "prepare": "lefthook install",
     "check": "biome check --write .",
     "dev": "turbo dev",
     "build": "turbo build",
@@ -26,8 +27,17 @@
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
     "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.10",
+    "lefthook": "^1.11.14",
     "playwright": "^1.53.2",
     "turbo": "^2.5.4"
   },
-  "packageManager": "npm@10.9.2"
+  "packageManager": "npm@10.9.2",
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.14.1",
+    "csvtojson": "^2.0.10",
+    "danfojs-node": "^1.2.0",
+    "dotenv": "^17.0.1",
+    "uuid": "^11.1.0"
+  }
 }

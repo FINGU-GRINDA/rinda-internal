@@ -32,6 +32,10 @@ npm run check-types # TypeScript type checking across all apps
 
 # Build for production
 npm run build       # Build all apps
+
+# Testing
+npm run test:e2e    # Run Playwright E2E tests
+npm run test:e2e:ui # Run tests in UI mode (recommended for development)
 ```
 
 ## Code Architecture
@@ -65,15 +69,17 @@ npm run build       # Build all apps
    - Web: `NEXT_PUBLIC_SERVER_URL`
 
 ### Development Workflow
-1. Always run `npm run check` before committing to ensure code quality
-2. Use `npm run db:studio` to inspect database during development
-3. The monorepo uses Turborepo caching - builds are incremental
-4. Hot reloading enabled in both frontend (Turbopack) and backend (tsx watch)
+1. Git hooks automatically run Biome formatting/linting on commit (via Lefthook)
+2. Commits must follow conventional commits format: `type(scope): message`
+3. Use `npm run db:studio` to inspect database during development
+4. The monorepo uses Turborepo caching - builds are incremental
+5. Hot reloading enabled in both frontend (Turbopack) and backend (tsx watch)
 
 ### Testing Approach
-- Run individual tests with standard npm/node test runners
+- E2E tests with Playwright covering authentication, dashboard, and todo flows
 - Type checking serves as the primary validation layer
 - Manual testing through Prisma Studio for database operations
+- Pre-push hooks run type checking to catch errors early
 
 ## Important Patterns
 
