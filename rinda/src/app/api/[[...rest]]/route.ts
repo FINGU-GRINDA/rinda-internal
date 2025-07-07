@@ -1,6 +1,7 @@
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
+import { CORSPlugin } from "@orpc/server/plugins";
 import { ZodSmartCoercionPlugin, ZodToJsonSchemaConverter } from "@orpc/zod";
 import { router } from "@/router";
 import "../../../polyfill";
@@ -39,6 +40,11 @@ const openAPIHandler = new OpenAPIHandler(router, {
 					},
 				},
 			},
+		}),
+		new CORSPlugin({
+			origin: (origin, options) => origin,
+			allowMethods: ["GET", "HEAD", "PUT", "POST", "DELETE", "PATCH"],
+			// ...
 		}),
 	],
 });
