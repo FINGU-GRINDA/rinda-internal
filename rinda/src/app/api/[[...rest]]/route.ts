@@ -5,6 +5,7 @@ import { CORSPlugin } from "@orpc/server/plugins";
 import { ZodSmartCoercionPlugin, ZodToJsonSchemaConverter } from "@orpc/zod";
 import { router } from "@/router";
 import "../../../polyfill";
+import { envPublic } from "@/publicEnv";
 
 const openAPIHandler = new OpenAPIHandler(router, {
 	interceptors: [
@@ -21,7 +22,8 @@ const openAPIHandler = new OpenAPIHandler(router, {
 					title: "ORPC Playground",
 					version: "1.0.0",
 				},
-				security: [{ bearerAuth: [] }],
+				servers: [{ url: envPublic.NEXT_PUBLIC_BASE_URL }],
+				// security: [{ bearerAuth: [] }],
 				components: {
 					securitySchemes: {
 						bearerAuth: {
@@ -31,6 +33,7 @@ const openAPIHandler = new OpenAPIHandler(router, {
 					},
 				},
 			},
+
 			docsConfig: {
 				authentication: {
 					securitySchemes: {

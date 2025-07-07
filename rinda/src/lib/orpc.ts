@@ -15,7 +15,7 @@ declare global {
 }
 
 const link = new RPCLink({
-	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/rpc`,
+	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/api`,
 	plugins: [
 		new BatchLinkPlugin({
 			groups: [
