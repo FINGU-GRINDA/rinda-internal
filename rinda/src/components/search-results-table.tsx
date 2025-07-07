@@ -128,9 +128,9 @@ export function SearchResultsTable() {
 								</td>
 								<td className="p-3">
 									<div className="flex flex-wrap gap-1">
-										{result.criteria.map((criterion, idx) => (
+										{result.criteria.map((criterion) => (
 											<Badge
-												key={idx}
+												key={criterion}
 												variant="secondary"
 												className={
 													criteriaColors[

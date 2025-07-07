@@ -46,9 +46,9 @@ export default function Page() {
 					<div className="mt-16">
 						<h2 className="text-xl font-semibold mb-6">Workflows</h2>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-							{workflows.map((workflow, index) => (
+							{workflows.map((workflow) => (
 								<WorkflowCard
-									key={index}
+									key={workflow.title}
 									title={workflow.title}
 									subtitle={workflow.subtitle}
 									description={workflow.description}

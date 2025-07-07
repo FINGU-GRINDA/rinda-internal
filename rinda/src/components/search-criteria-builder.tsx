@@ -86,8 +86,8 @@ export function SearchCriteriaBuilder({
 				<div>
 					<h3 className="text-sm font-semibold mb-3">Filter Breakdown</h3>
 					<div className="space-y-2">
-						{parsedCriteria.map((criterion, idx) => (
-							<div key={idx} className="flex items-start gap-2">
+						{parsedCriteria.map((criterion) => (
+							<div key={criterion.text} className="flex items-start gap-2">
 								<CriteriaTag color={criterion.color}>
 									{criterion.text}
 								</CriteriaTag>
