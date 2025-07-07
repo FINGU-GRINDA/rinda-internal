@@ -32,7 +32,7 @@ export const peopleRouter = {
 				query: input.query,
 			});
 
-			const result = await client.search("people", {
+			const result = await client.search("peoplev2", {
 				vector: queryEmbedding,
 				limit: input.limit,
 				offset: input.offset,
