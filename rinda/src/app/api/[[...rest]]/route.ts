@@ -22,7 +22,7 @@ const openAPIHandler = new OpenAPIHandler(router, {
 					title: "ORPC Playground",
 					version: "1.0.0",
 				},
-				servers: [{ url: envPublic.NEXT_PUBLIC_BASE_URL }],
+				servers: [{ url: `${envPublic.NEXT_PUBLIC_BASE_URL}/api` }],
 				// security: [{ bearerAuth: [] }],
 				components: {
 					securitySchemes: {
