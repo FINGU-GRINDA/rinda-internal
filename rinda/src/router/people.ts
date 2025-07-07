@@ -52,4 +52,16 @@ export const peopleRouter = {
 		.handler(async () => {
 			throw new ORPCError("Not implemented");
 		}),
+	createPreSearch: authed
+		.route({
+			method: "POST",
+			path: "/people/create-pre-search",
+			summary: "Create pre search",
+			tags: ["People"],
+		})
+		.input(z.object({ query: z.string() }))
+		.output(PeopleSchema)
+		.handler(async () => {
+			throw new ORPCError("Not implemented");
+		}),
 };

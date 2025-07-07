@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "next lint",
-    "type:check": "tsc --noEmit"
+    "type:check": "tsc --noEmit",
+    "format": "npx @biomejs/biome check --write"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.0.6",
     "@orpc/client": "^1.6.0",
     "@orpc/openapi": "^1.6.0",
     "@orpc/react": "^1.6.0",
@@ -20,17 +22,36 @@
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.5",
+    "lefthook": "^1.11.16",
     "next": "^15.3.5",
+    "prisma": "^6.11.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tw-animate-css": "^1.3.5",
     "typescript": "^5.8.3",
     "zod": "^3.25.74"
   },
   "dependencies": {
+    "@prisma/client": "^6.11.1",
     "@qdrant/js-client-rest": "^1.14.1",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@tailwindcss/postcss": "^4.1.11",
+    "better-auth": "^1.2.12",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "csvtojson": "^2.0.10",
     "dotenv": "^17.0.1",
+    "lucide-react": "^0.525.0",
+    "nuqs": "^2.4.3",
     "p-retry": "^6.2.1",
+    "postcss": "^8.5.6",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11",
     "uuid": "^11.1.0"
   }
 }

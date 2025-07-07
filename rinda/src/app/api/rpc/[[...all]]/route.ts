@@ -4,7 +4,7 @@ import { onError } from "@orpc/server";
 import { CORSPlugin } from "@orpc/server/plugins";
 import { ZodSmartCoercionPlugin, ZodToJsonSchemaConverter } from "@orpc/zod";
 import { router } from "@/router";
-import "../../../polyfill";
+import "../../../../polyfill";
 import { envPublic } from "@/publicEnv";
 
 const openAPIHandler = new OpenAPIHandler(router, {
@@ -22,7 +22,7 @@ const openAPIHandler = new OpenAPIHandler(router, {
 					title: "ORPC Playground",
 					version: "1.0.0",
 				},
-				servers: [{ url: `${envPublic.NEXT_PUBLIC_BASE_URL}/api` }],
+				servers: [{ url: `${envPublic.NEXT_PUBLIC_BASE_URL}/api/rpc` }],
 				// security: [{ bearerAuth: [] }],
 				components: {
 					securitySchemes: {
@@ -45,7 +45,7 @@ const openAPIHandler = new OpenAPIHandler(router, {
 			},
 		}),
 		new CORSPlugin({
-			origin: (origin, options) => origin,
+			origin: (origin, _options) => origin,
 			allowMethods: ["GET", "HEAD", "PUT", "POST", "DELETE", "PATCH"],
 			// ...
 		}),
@@ -54,7 +54,7 @@ const openAPIHandler = new OpenAPIHandler(router, {
 
 async function handleRequest(request: Request) {
 	const { response } = await openAPIHandler.handle(request, {
-		prefix: "/api",
+		prefix: "/api/rpc",
 		context: {},
 	});
 
