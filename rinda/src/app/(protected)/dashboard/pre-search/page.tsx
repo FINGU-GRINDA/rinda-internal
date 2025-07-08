@@ -1,19 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Navbar } from "@/components/navbar";
 import { SearchCriteriaBuilder } from "@/components/search-criteria-builder";
 import { SearchResultsTable } from "@/components/search-results-table";
 import { Sidebar } from "@/components/sidebar";
-import { useQuerySearchParams } from "@/hooks/use-search-params";
 
 function PreSearchContent() {
-	const searchParams = useSearchParams();
-
-	const query = searchParams.get("q") || "";
-	const _category = searchParams.get("category") || "people";
-
 	return (
 		<>
 			<Sidebar />
@@ -22,7 +15,7 @@ function PreSearchContent() {
 				<div className="p-6">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 						<SearchResultsTable />
-						<SearchCriteriaBuilder initialQuery={query} />
+						<SearchCriteriaBuilder />
 					</div>
 				</div>
 			</main>

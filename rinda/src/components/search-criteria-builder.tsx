@@ -64,10 +64,21 @@ export function SearchCriteriaBuilder() {
 			<div className="space-y-4">
 				<div>
 					<Label htmlFor="search-query">Search Query</Label>
+					{/* biome-ignore lint/nursery/useUniqueElementIds: <explanation> */}
 					<Textarea
 						id="search-query"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
+						value={searchQuery.q}
+						onChange={async (e) => {
+							if (!e.target.value) {
+								return;
+							}
+							await setSearchQuery((p) => {
+								return {
+									...p,
+									q: e.target.value,
+								};
+							});
+						}}
 						placeholder="Enter your search criteria..."
 						className="mt-2 min-h-[100px]"
 					/>
