@@ -1,20 +1,16 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, FileText } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuerySearchParams } from "@/hooks/use-search-params";
-import { orpc } from "@/lib/orpc";
 
 export function SearchBar() {
 	const [searchQueryState, setSearchQueryState] = useQuerySearchParams();
 	const searchParams = useSearchParams();
-	const createPreSearch = useMutation(
-		orpc.people.createPreSearch.mutationOptions(),
-	);
+
 	const category = searchQueryState.category;
 	const query = searchQueryState.q;
 
@@ -29,16 +25,6 @@ export function SearchBar() {
 
 	const handleSearch = async () => {
 		if (searchQueryState.q?.trim()) {
-			const result = await createPreSearch.mutateAsync({
-				query: searchQueryState.q,
-			});
-
-			await setSearchQueryState((p) => {
-				return {
-					...p,
-					requirements: result,
-				};
-			});
 			router.push(`/dashboard/pre-search?${searchParams.toString()}`);
 		}
 	};
