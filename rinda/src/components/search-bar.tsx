@@ -1,15 +1,23 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, FileText } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuerySearchParams } from "@/hooks/use-search-params";
+import { orpc } from "@/lib/orpc";
 
 export function SearchBar() {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [activeTab, setActiveTab] = useState("people");
+	const [searchQueryState, setSearchQueryState] = useQuerySearchParams();
+	const searchParams = useSearchParams();
+	const createPreSearch = useMutation(
+		orpc.people.createPreSearch.mutationOptions(),
+	);
+	const category = searchQueryState.category;
+	const query = searchQueryState.q;
+
 	const router = useRouter();
 
 	const categories = [
@@ -19,13 +27,19 @@ export function SearchBar() {
 		{ id: "articles", label: "Articles", selected: false, disabled: true },
 	];
 
-	const handleSearch = () => {
-		if (searchQuery.trim()) {
-			const params = new URLSearchParams({
-				q: searchQuery.trim(),
-				category: activeTab,
+	const handleSearch = async () => {
+		if (searchQueryState.q?.trim()) {
+			const result = await createPreSearch.mutateAsync({
+				query: searchQueryState.q,
 			});
-			router.push(`/dashboard/pre-search?${params.toString()}`);
+
+			await setSearchQueryState((p) => {
+				return {
+					...p,
+					requirements: result,
+				};
+			});
+			router.push(`/dashboard/pre-search?${searchParams.toString()}`);
 		}
 	};
 
@@ -35,7 +49,18 @@ export function SearchBar() {
 				Find your perfect list
 			</h1>
 
-			<Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+			<Tabs
+				value={category}
+				onValueChange={async (v) => {
+					await setSearchQueryState((p) => {
+						return {
+							...p,
+							category: v,
+						};
+					});
+				}}
+				className="mb-6"
+			>
 				<TabsList className="w-full h-auto p-1 grid grid-cols-5 gap-1">
 					{categories.map((cat) => (
 						<TabsTrigger
@@ -57,8 +82,15 @@ export function SearchBar() {
 				<div className="relative">
 					<Input
 						placeholder="e.g. a software engineer in California..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
+						value={query}
+						onChange={async (e) => {
+							await setSearchQueryState((p) => {
+								return {
+									...p,
+									q: e.target.value,
+								};
+							});
+						}}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
 						className="pr-12 h-12 text-base"
 					/>

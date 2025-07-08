@@ -17,16 +17,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useQuerySearchParams } from "@/hooks/use-search-params";
 
-interface SearchCriteriaBuilderProps {
-	initialQuery?: string;
-}
-
-export function SearchCriteriaBuilder({
-	initialQuery = "",
-}: SearchCriteriaBuilderProps) {
+export function SearchCriteriaBuilder() {
+	const [searchQuery, setSearchQuery] = useQuerySearchParams();
 	const router = useRouter();
-	const [searchQuery, setSearchQuery] = useState(initialQuery);
 	const [excludePeople, setExcludePeople] = useState(false);
 	const [resultCount, setResultCount] = useState("25");
 	const [filterType, setFilterType] = useState("everything");
@@ -37,17 +32,12 @@ export function SearchCriteriaBuilder({
 		{ id: "graduation", label: "Graduation Date", checked: false },
 	]);
 
-	const parsedCriteria = [
-		{
-			text: "Currently employed as a software developer",
-			color: "purple" as const,
-		},
-		{ text: "Located in Imus, Cavite", color: "orange" as const },
-		{
-			text: "Employed by a company headquartered outside the Philippines",
-			color: "blue" as const,
-		},
-	];
+	const parsedCriteria = searchQuery.requirements.map((v) => {
+		return {
+			text: v,
+			color: "purple",
+		};
+	});
 
 	const handleEnrichmentToggle = (id: string) => {
 		setEnrichments((prev) =>

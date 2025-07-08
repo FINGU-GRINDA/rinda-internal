@@ -1,11 +1,12 @@
+import { os } from "@/orpc";
 import { me, signin, signup } from "./auth";
 import { peopleRouter } from "./people";
 
-export const router = {
+export const router = os.router({
 	auth: {
-		signup,
-		signin,
-		me,
+		me: me,
+		signup: signup,
+		signin: signin,
 	},
 	people: peopleRouter,
-};
+});

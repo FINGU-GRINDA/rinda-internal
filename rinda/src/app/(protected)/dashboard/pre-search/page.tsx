@@ -6,9 +6,11 @@ import { Navbar } from "@/components/navbar";
 import { SearchCriteriaBuilder } from "@/components/search-criteria-builder";
 import { SearchResultsTable } from "@/components/search-results-table";
 import { Sidebar } from "@/components/sidebar";
+import { useQuerySearchParams } from "@/hooks/use-search-params";
 
 function PreSearchContent() {
 	const searchParams = useSearchParams();
+
 	const query = searchParams.get("q") || "";
 	const _category = searchParams.get("category") || "people";
 
