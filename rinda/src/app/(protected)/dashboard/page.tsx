@@ -6,35 +6,35 @@ import { SearchBar } from "@/components/search-bar";
 import { Sidebar } from "@/components/sidebar";
 import { WorkflowCard } from "@/components/workflow-card";
 
-export default function Page() {
-	const workflows = [
-		{
-			title: "Sales",
-			subtitle: "Find customers",
-			description: "Source the perfect companies and people to sell to",
-			icon: TrendingUp,
-		},
-		{
-			title: "Market research",
-			subtitle: "Analyze competitors",
-			description: "Find competitors and know everything about them",
-			icon: Search,
-		},
-		{
-			title: "Recruiting",
-			subtitle: "Source talent",
-			description: "Find the exact profiles you need for your business",
-			icon: Users,
-		},
-		{
-			title: "Academic research",
-			subtitle: "Find research papers",
-			description:
-				"Search for papers on a topic with summaries, citations, and more",
-			icon: FileText,
-		},
-	];
+const workflows = [
+	{
+		title: "Sales",
+		subtitle: "Find customers",
+		description: "Source the perfect companies and people to sell to",
+		icon: TrendingUp,
+	},
+	{
+		title: "Market research",
+		subtitle: "Analyze competitors",
+		description: "Find competitors and know everything about them",
+		icon: Search,
+	},
+	{
+		title: "Recruiting",
+		subtitle: "Source talent",
+		description: "Find the exact profiles you need for your business",
+		icon: Users,
+	},
+	{
+		title: "Academic research",
+		subtitle: "Find research papers",
+		description:
+			"Search for papers on a topic with summaries, citations, and more",
+		icon: FileText,
+	},
+];
 
+export default function Page() {
 	return (
 		<>
 			<Sidebar />

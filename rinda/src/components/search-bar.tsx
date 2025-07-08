@@ -25,7 +25,7 @@ export function SearchBar() {
 				q: searchQuery.trim(),
 				category: activeTab,
 			});
-			router.push(`/pre-search?${params.toString()}`);
+			router.push(`/dashboard/pre-search?${params.toString()}`);
 		}
 	};
 
