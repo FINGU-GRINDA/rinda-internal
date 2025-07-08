@@ -20,12 +20,6 @@ const searchParamsParser = {
 	hasProcessedApiData: parseAsBoolean.withDefault(false),
 	// Custom criteria with color information (format: "text|color")
 	customCriteria: parseAsArrayOf(parseAsString).withDefault([]),
-	// Form state persistence
-	excludePeople: parseAsBoolean.withDefault(false),
-	resultCount: parseAsString.withDefault("25"),
-	filterType: parseAsString.withDefault("everything"),
-	// Enrichments (format: "id|checked")
-	enrichments: parseAsArrayOf(parseAsString).withDefault([]),
 } as const;
 
 // Type-safe search params
@@ -37,10 +31,6 @@ export type SearchParams = {
 	generatedCriteria: string[];
 	hasProcessedApiData: boolean;
 	customCriteria: string[];
-	excludePeople: boolean;
-	resultCount: string;
-	filterType: string;
-	enrichments: string[];
 };
 
 // Custom hook that provides type-safe query state management
