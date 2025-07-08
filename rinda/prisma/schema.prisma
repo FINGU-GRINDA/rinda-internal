@@ -24,6 +24,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  Webset        Webset[]
 
   @@unique([email])
   @@map("user")
@@ -72,4 +73,32 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Webset {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  searchQuery         String
+  validationCriterias String[]
+  enrichmentCriterias String[]
+  count               Int      @default(10)
+
+  CreatedByUser   User        @relation(fields: [createdByuserId], references: [id], onDelete: NoAction)
+  createdByuserId String
+  WebsetRows      WebsetRow[]
+}
+
+model WebsetRow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  originalData   Json?
+  validationData String[]
+  enrichmentData String[]
+
+  Webset   Webset? @relation(fields: [websetId], references: [id], onDelete: Cascade)
+  websetId String?
 }
