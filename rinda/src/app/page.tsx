@@ -32,92 +32,94 @@ export default function Page() {
 	return (
 		<div className="min-h-screen bg-background">
 			{/* Navigation */}
-			<nav
-				className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-					scrolled
-						? "bg-background/95 backdrop-blur-md border-b shadow-sm"
-						: "bg-background/80 backdrop-blur-md border-b"
-				}`}
-			>
-				<div className="mx-auto max-w-7xl px-6 lg:px-8">
-					<div className="flex h-16 items-center justify-between">
-						<div className="flex items-center gap-2">
-							<div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-								<Sparkles className="h-5 w-5 text-white" />
+			<div className="fixed top-0 w-full z-50 px-6 lg:px-8 py-4">
+				<nav
+					className={`mx-auto max-w-7xl rounded-2xl transition-all duration-300 ${
+						scrolled
+							? "bg-background/70 backdrop-blur-lg border shadow-lg"
+							: "bg-background/50 backdrop-blur-lg border"
+					}`}
+				>
+					<div className="px-6 lg:px-8">
+						<div className="flex h-16 items-center justify-between">
+							<div className="flex items-center gap-2">
+								<div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+									<Sparkles className="h-5 w-5 text-white" />
+								</div>
+								<span className="text-xl font-bold">Rinda Internal</span>
 							</div>
-							<span className="text-xl font-bold">Rinda Internal</span>
-						</div>
-						<div className="hidden md:flex items-center gap-4">
-							<Button asChild variant="ghost" size="sm">
-								<Link href="#features">Features</Link>
-							</Button>
-							<Button asChild variant="ghost" size="sm">
-								<Link href="#how-it-works">How it Works</Link>
-							</Button>
-							<Button asChild variant="ghost" size="sm">
-								<Link href="#testimonials">Testimonials</Link>
-							</Button>
-							<Button asChild variant="ghost" size="sm">
-								<Link href="/auth">Sign In</Link>
-							</Button>
-							<Button asChild size="sm">
-								<Link href="/auth">Get Started</Link>
-							</Button>
-						</div>
-						<div className="md:hidden">
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-							>
-								{mobileMenuOpen ? (
-									<X className="h-5 w-5" />
-								) : (
-									<Menu className="h-5 w-5" />
-								)}
-							</Button>
+							<div className="hidden md:flex items-center gap-4">
+								<Button asChild variant="ghost" size="sm">
+									<Link href="#features">Features</Link>
+								</Button>
+								<Button asChild variant="ghost" size="sm">
+									<Link href="#how-it-works">How it Works</Link>
+								</Button>
+								<Button asChild variant="ghost" size="sm">
+									<Link href="#testimonials">Testimonials</Link>
+								</Button>
+								<Button asChild variant="ghost" size="sm">
+									<Link href="/auth">Sign In</Link>
+								</Button>
+								<Button asChild size="sm">
+									<Link href="/auth">Get Started</Link>
+								</Button>
+							</div>
+							<div className="md:hidden">
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+								>
+									{mobileMenuOpen ? (
+										<X className="h-5 w-5" />
+									) : (
+										<Menu className="h-5 w-5" />
+									)}
+								</Button>
+							</div>
 						</div>
 					</div>
-				</div>
 
-				{/* Mobile menu */}
-				{mobileMenuOpen && (
-					<div className="md:hidden bg-background border-t">
-						<div className="px-6 py-4 space-y-2">
-							<Link
-								href="#features"
-								className="block py-2 text-sm font-medium hover:text-primary"
-							>
-								Features
-							</Link>
-							<Link
-								href="#how-it-works"
-								className="block py-2 text-sm font-medium hover:text-primary"
-							>
-								How it Works
-							</Link>
-							<Link
-								href="#testimonials"
-								className="block py-2 text-sm font-medium hover:text-primary"
-							>
-								Testimonials
-							</Link>
-							<Link
-								href="/auth"
-								className="block py-2 text-sm font-medium hover:text-primary"
-							>
-								Sign In
-							</Link>
-							<Button asChild size="sm" className="w-full mt-2">
-								<Link href="/auth">Get Started</Link>
-							</Button>
+					{/* Mobile menu */}
+					{mobileMenuOpen && (
+						<div className="md:hidden bg-background/70 backdrop-blur-lg border-t rounded-b-2xl">
+							<div className="px-6 py-4 space-y-2">
+								<Link
+									href="#features"
+									className="block py-2 text-sm font-medium hover:text-primary"
+								>
+									Features
+								</Link>
+								<Link
+									href="#how-it-works"
+									className="block py-2 text-sm font-medium hover:text-primary"
+								>
+									How it Works
+								</Link>
+								<Link
+									href="#testimonials"
+									className="block py-2 text-sm font-medium hover:text-primary"
+								>
+									Testimonials
+								</Link>
+								<Link
+									href="/auth"
+									className="block py-2 text-sm font-medium hover:text-primary"
+								>
+									Sign In
+								</Link>
+								<Button asChild size="sm" className="w-full mt-2">
+									<Link href="/auth">Get Started</Link>
+								</Button>
+							</div>
 						</div>
-					</div>
-				)}
-			</nav>
+					)}
+				</nav>
+			</div>
 
 			{/* Hero Section */}
-			<section className="relative overflow-hidden pt-16">
+			<section className="relative overflow-hidden pt-24">
 				{/* Background gradient */}
 				<div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-accent/5 to-background" />
 
