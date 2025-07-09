@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -19,7 +19,7 @@ import { orpc } from "@/lib/orpc";
 export function SearchCriteriaBuilder() {
 	const [searchQuery, setSearchQuery] = useQuerySearchParams();
 	const { data: dataRequirements, isLoading: isLoadingRequirements } = useQuery(
-		orpc.people.createPresearch.queryOptions({
+		orpc.webset.createPresearch.queryOptions({
 			input: {
 				query: searchQuery.q,
 			},
@@ -59,6 +59,10 @@ export function SearchCriteriaBuilder() {
 	const router = useRouter();
 	const [isAddingCriteria, setIsAddingCriteria] = useState(false);
 	const textareaId = useId();
+
+	const createWebsetMutation = useMutation(
+		orpc.webset.create.mutationOptions(),
+	);
 
 	// Parse custom criteria from URL
 	const customCriteria: CriteriaItem[] = searchQuery.customCriteria.map(
@@ -115,6 +119,35 @@ export function SearchCriteriaBuilder() {
 
 	const handleBack = () => {
 		router.push("/dashboard");
+	};
+
+	const handleSearch = async () => {
+		if (!searchQuery.q || createWebsetMutation.isPending) return;
+
+		// Prepare validation criteria from both API-generated and custom criteria
+		const validationCriterias = [
+			...searchQuery.generatedCriteria,
+			...customCriteria.map((c) => c.text),
+		];
+
+		createWebsetMutation.mutate(
+			{
+				query: searchQuery.q,
+				validationCriterias: validationCriterias,
+				enrichmentCriterias: [],
+				count: 10,
+			},
+			{
+				onSuccess: (webset) => {
+					// Navigate to search results page with webset ID
+					router.push(`/dashboard/search?websetId=${webset.id}`);
+				},
+				onError: (error) => {
+					console.error("Failed to create webset:", error);
+					// TODO: Add proper error handling/toast notification
+				},
+			},
+		);
 	};
 
 	return (
@@ -193,7 +226,20 @@ export function SearchCriteriaBuilder() {
 				</div>
 			</div>
 
-			<Button className="w-full">Search</Button>
+			<Button
+				className="w-full"
+				onClick={handleSearch}
+				disabled={!searchQuery.q || createWebsetMutation.isPending}
+			>
+				{createWebsetMutation.isPending ? (
+					<div className="flex items-center gap-2">
+						<PulseLoader color="white" size={6} speedMultiplier={0.8} />
+						Creating Search...
+					</div>
+				) : (
+					"Search"
+				)}
+			</Button>
 		</div>
 	);
 }

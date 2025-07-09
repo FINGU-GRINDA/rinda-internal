@@ -90,13 +90,19 @@ model Webset {
   WebsetRows      WebsetRow[]
 }
 
+enum ValidationStatus {
+  VALID
+  INVALID
+  PENDING
+}
+
 model WebsetRow {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   originalData   Json?
-  validationData String[]
+  validationData ValidationStatus[]
   enrichmentData String[]
 
   Webset   Webset? @relation(fields: [websetId], references: [id], onDelete: Cascade)

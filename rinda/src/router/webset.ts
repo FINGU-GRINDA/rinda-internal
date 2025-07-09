@@ -7,13 +7,14 @@ import { requiredAuthMiddleware } from "@/middlewares/auth";
 import { createQueryEmbedding, rerankDocuments } from "@/services/jina-service";
 import { getQdrantClient } from "@/services/qdrant-service";
 import { getRedis, subscribe } from "@/services/redis-service";
+import { ValidationStatus } from "../../generated/prisma";
 
 const websetRowSchema = z.object({
 	id: z.string(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
 	originalData: z.custom<JsonValue>().nullable(),
-	validationData: z.array(z.string()),
+	validationData: z.array(z.enum(["VALID", "INVALID", "PENDING"])),
 	enrichmentData: z.array(z.string()),
 	websetId: z.string().nullable(),
 });
@@ -149,8 +150,9 @@ export const websetRouter = {
 				data: rerankedPayloads.map((payload) => ({
 					websetId: webset.id,
 					originalData: payload as unknown as InputJsonValue,
-					validationData: [],
-					enrichmentData: [],
+					validationData: Array(input.validationCriterias.length).fill(
+						ValidationStatus.PENDING,
+					),
 				})),
 				skipDuplicates: true,
 			});
@@ -173,6 +175,8 @@ export const websetRouter = {
 
 			for await (const websetRow of webset.WebsetRows) {
 			}
+
+			return webset;
 		}),
 	createPresearch: os
 		.use(requiredAuthMiddleware)

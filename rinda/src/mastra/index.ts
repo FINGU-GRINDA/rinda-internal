@@ -5,11 +5,9 @@ import { validationCriteriaAgent } from "./agents/validation-criteria-agent";
 import { weatherAgent } from "./agents/weather-agent";
 import { generateValidationCriteriaWorkflow } from "./workflows/generate-validation-criteria";
 import { criteriaValidationWorkflow } from "./workflows/validate-criteria";
-import { weatherWorkflow } from "./workflows/weather-workflow";
 
 export const mastra = new Mastra({
 	workflows: {
-		weatherWorkflow,
 		criteriaValidationWorkflow,
 		generateValidationCriteriaWorkflow,
 	},
