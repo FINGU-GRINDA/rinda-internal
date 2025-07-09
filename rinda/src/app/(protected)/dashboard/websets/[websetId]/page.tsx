@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { ClipLoader } from "react-spinners";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
-import { WebsetResultsTable } from "@/components/webset-results-table";
+import { WebsetResultsTable } from "@/components/webset-results-table-optimized";
 
 function WebsetContent({ websetId }: { websetId: string }) {
 	return (

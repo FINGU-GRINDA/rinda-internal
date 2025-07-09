@@ -41,7 +41,6 @@ async function processWebsetInBackground(
 		const rerankedPayloadsWithScore = await rerankDocuments({
 			query: input.query,
 			documents: payloads,
-			topN: input.count,
 		});
 
 		const rerankedPayloads = rerankedPayloadsWithScore.map(
@@ -64,7 +63,7 @@ async function processWebsetInBackground(
 				id: websetId,
 			},
 			data: {
-				count: rerankedPayloads.length,
+				count: input.count,
 			},
 			include: {
 				WebsetRows: true,
