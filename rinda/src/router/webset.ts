@@ -111,26 +111,32 @@ export const websetRouter = {
 			),
 		)
 		.handler(async function* ({ input }) {
-			const webset = await db.webset.findUnique({
-				where: {
-					id: input.id,
-				},
-				include: {
-					WebsetRows: true,
-				},
-			});
+			try {
+				const webset = await db.webset.findUnique({
+					where: {
+						id: input.id,
+					},
+					include: {
+						WebsetRows: true,
+					},
+				});
 
-			if (!webset) {
-				throw new ORPCError("Webset not found");
-			}
+				if (!webset) {
+					throw new ORPCError("Webset not found");
+				}
 
-			yield webset;
+				yield webset;
 
-			// Subscribe to Redis updates for this webset
-			for await (const message of subscribe<typeof webset>(
-				`webset:${webset.id}`,
-			)) {
-				yield message;
+				// Subscribe to Redis updates for this webset
+				for await (const message of subscribe<typeof webset>(
+					`webset:${webset.id}`,
+				)) {
+					yield message;
+				}
+			} catch (error) {
+				console.error("Error processing webset in background:", error);
+			} finally {
+				console.log("Done processing webset in background");
 			}
 		}),
 	update: os

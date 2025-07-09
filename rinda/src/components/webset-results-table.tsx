@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Clock, ExternalLink, User, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnSelector } from "@/components/column-selector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { orpc } from "@/lib/orpc";
+import { getQueryClient } from "@/lib/query/hydration";
 import type { ValidationStatus } from "../../generated/prisma";
 
 interface WebsetResultsTableProps {
@@ -127,6 +128,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 	} = useQuery(
 		orpc.webset.liveQuery.experimental_liveOptions({
 			input: { id: websetId },
+			gcTime: 0,
 		}),
 	);
 
@@ -318,7 +320,27 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 		);
 	}
 
-	if (error) {
+	if (error && !isLoading) {
+		// Ignore CancelledError/AbortError - this happens when navigating between websets
+		if (
+			error instanceof Error &&
+			(error.name === "CancelledError" || error.name === "AbortError")
+		) {
+			// Show loading state when query is cancelled
+			return (
+				<div className="bg-background border rounded-lg p-6">
+					<div className="flex items-center justify-center py-8">
+						<div className="flex flex-col items-center gap-3">
+							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+							<p className="text-sm text-muted-foreground">
+								Loading search results...
+							</p>
+						</div>
+					</div>
+				</div>
+			);
+		}
+
 		return (
 			<div className="bg-background border rounded-lg p-6">
 				<div className="text-center py-8">
@@ -454,12 +476,14 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 					onMouseMove={handleMouseMove}
 					onMouseUp={handleMouseUp}
 					onMouseLeave={handleMouseLeave}
-					style={{
-						userSelect: isPanning ? "none" : "auto",
-						WebkitUserSelect: isPanning ? "none" : "auto",
-						msUserSelect: isPanning ? "none" : "auto",
-						MozUserSelect: isPanning ? "none" : "auto",
-					}}
+					style={
+						{
+							userSelect: isPanning ? "none" : "auto",
+							WebkitUserSelect: isPanning ? "none" : "auto",
+							msUserSelect: isPanning ? "none" : "auto",
+							MozUserSelect: isPanning ? "none" : "auto",
+						} as React.CSSProperties
+					}
 				>
 					<table className="w-full min-w-[1200px]">
 						<thead className="bg-muted/50 border-b">
