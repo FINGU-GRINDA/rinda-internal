@@ -140,7 +140,7 @@ export function SearchCriteriaBuilder() {
 			{
 				onSuccess: (webset) => {
 					// Navigate to search results page with webset ID
-					router.push(`/dashboard/search?websetId=${webset.id}`);
+					router.push(`/dashboard/websets/${webset.id}`);
 				},
 				onError: (error) => {
 					console.error("Failed to create webset:", error);

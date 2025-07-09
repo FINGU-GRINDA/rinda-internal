@@ -117,6 +117,8 @@ src/
 
 10. **Component Development**: UI components in `src/components/ui/` use Radix UI primitives with custom styling
 
+11. **Tests**: Always accompany a feature with a test case. And run test to prevent regressions.
+
 ## Current Development Focus
 
 Recent work has focused on:

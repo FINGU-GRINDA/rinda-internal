@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,8 @@ import styles from "./sidebar.module.css";
 export function Sidebar() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	const currentWebsetId = searchParams.get("websetId");
+	const params = useParams();
+	const currentWebsetId = params.websetId as string | undefined;
 
 	const {
 		data: websets,
@@ -33,7 +33,7 @@ export function Sidebar() {
 	}, [websets, searchQuery]);
 
 	const handleWebsetClick = (websetId: string) => {
-		router.push(`/dashboard/search?websetId=${websetId}`);
+		router.push(`/dashboard/websets/${websetId}`);
 	};
 
 	const handleNewSearch = () => {

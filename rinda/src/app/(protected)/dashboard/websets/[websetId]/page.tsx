@@ -1,29 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ClipLoader } from "react-spinners";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { WebsetResultsTable } from "@/components/webset-results-table";
 
-function SearchContent() {
-	const searchParams = useSearchParams();
-	const websetId = searchParams.get("websetId");
-
-	if (!websetId) {
-		return (
-			<div className="flex items-center justify-center min-h-screen bg-background">
-				<div className="text-center">
-					<h2 className="text-lg font-semibold mb-2">No search results</h2>
-					<p className="text-sm text-muted-foreground">
-						Webset ID is required to display search results
-					</p>
-				</div>
-			</div>
-		);
-	}
-
+function WebsetContent({ websetId }: { websetId: string }) {
 	return (
 		<>
 			<Sidebar />
@@ -37,7 +20,11 @@ function SearchContent() {
 	);
 }
 
-export default function SearchPage() {
+export default function WebsetPage({
+	params,
+}: {
+	params: { websetId: string };
+}) {
 	return (
 		<Suspense
 			fallback={
@@ -51,7 +38,7 @@ export default function SearchPage() {
 				</div>
 			}
 		>
-			<SearchContent />
+			<WebsetContent websetId={params.websetId} />
 		</Suspense>
 	);
 }
