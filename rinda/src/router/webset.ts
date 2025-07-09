@@ -243,4 +243,32 @@ export const websetRouter = {
 			});
 			return websets;
 		}),
+	previewSearch: os
+		.use(requiredAuthMiddleware)
+		.route({
+			method: "POST",
+			path: "/webset/preview-search",
+			summary: "Preview search",
+			tags: ["Webset"],
+		})
+		.input(
+			z.object({
+				query: z.string(),
+				count: z.number().int().min(1).max(10).default(10),
+			}),
+		)
+		.handler(async ({ input }) => {
+			const embedding = await createQueryEmbedding({ query: input.query });
+
+			const qdrantClient = await getQdrantClient();
+			// run webset query
+			const result = await qdrantClient.search("peoplev2", {
+				vector: embedding,
+				limit: input.count,
+			});
+
+			const payloads = result.map((r) => r.payload);
+
+			return payloads;
+		}),
 };

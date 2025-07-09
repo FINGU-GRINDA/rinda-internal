@@ -11,11 +11,15 @@ function PreSearchContent() {
 		<>
 			<Sidebar />
 			<Navbar />
-			<main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] bg-background">
-				<div className="p-6">
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-						<SearchResultsTable />
-						<SearchCriteriaBuilder />
+			<main className="ml-64 mt-16 h-[calc(100vh-4rem)] bg-background">
+				<div className="p-6 h-full">
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+						<div className="lg:col-span-2 h-full">
+							<SearchResultsTable />
+						</div>
+						<div className="lg:col-span-1 h-full">
+							<SearchCriteriaBuilder />
+						</div>
 					</div>
 				</div>
 			</main>

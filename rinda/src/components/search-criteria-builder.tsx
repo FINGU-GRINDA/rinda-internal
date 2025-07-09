@@ -151,15 +151,15 @@ export function SearchCriteriaBuilder() {
 	};
 
 	return (
-		<div className="bg-background border rounded-lg p-6 space-y-6">
-			<div className="flex items-center gap-4">
+		<div className="bg-background border rounded-lg p-4 space-y-4 h-full flex flex-col">
+			<div className="flex items-center gap-3">
 				<Button variant="ghost" size="icon" onClick={handleBack}>
 					<ArrowLeft className="h-4 w-4" />
 				</Button>
 				<h2 className="text-lg font-semibold">Search Criteria</h2>
 			</div>
 
-			<div className="space-y-4">
+			<div className="space-y-4 flex-1">
 				<div>
 					<Label htmlFor={textareaId}>Search Query</Label>
 					<Textarea
@@ -167,22 +167,22 @@ export function SearchCriteriaBuilder() {
 						value={searchQuery.q}
 						disabled={true}
 						placeholder="Enter your search criteria..."
-						className="mt-2 min-h-[100px]"
+						className="mt-2 min-h-[80px]"
 					/>
 				</div>
 
-				<div>
-					<h3 className="text-sm font-semibold mb-3">Filter Breakdown</h3>
+				<div className="flex-1">
+					<h3 className="text-sm font-semibold mb-2">Filter Breakdown</h3>
 					{isLoadingRequirements &&
 					!!searchQuery.q &&
 					!searchQuery.hasProcessedApiData ? (
 						<div className="space-y-2">
 							{Array.from({ length: 3 }, (_, i) => (
 								<div key={i.toString()} className="flex items-start gap-2">
-									<Skeleton className="h-8 w-32 rounded-full" />
+									<Skeleton className="h-7 w-28 rounded-full" />
 								</div>
 							))}
-							<Skeleton className="h-4 w-48 mt-3" />
+							<Skeleton className="h-4 w-40 mt-2" />
 						</div>
 					) : (
 						<div className="space-y-2">
@@ -227,7 +227,7 @@ export function SearchCriteriaBuilder() {
 			</div>
 
 			<Button
-				className="w-full"
+				className="w-full mt-auto"
 				onClick={handleSearch}
 				disabled={!searchQuery.q || createWebsetMutation.isPending}
 			>
