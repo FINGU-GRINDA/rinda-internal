@@ -1,0 +1,53 @@
+@keyframes fadeInShine {
+	0% {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	50% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes shine {
+	0% {
+		background-position: -100% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+.animatedWord {
+	display: inline-block;
+	opacity: 0;
+	background: linear-gradient(
+		90deg,
+		currentColor 40%,
+		rgba(255, 255, 255, 0.6) 50%,
+		currentColor 60%
+	);
+	background-size: 200% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation:
+		fadeInShine 1s ease-out forwards,
+		shine 3s ease-in-out infinite;
+}
+
+.word1 {
+	animation-delay: 0ms, 1s;
+}
+
+.word2 {
+	animation-delay: 400ms, 1.4s;
+}
+
+.word3 {
+	animation-delay: 800ms, 1.8s;
+}
