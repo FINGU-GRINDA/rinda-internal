@@ -1,6 +1,6 @@
 import "dotenv/config";
 import z from "zod";
-import { envPublic, PublicEnvSchema } from "./publicEnv";
+import { PublicEnvSchema } from "./publicEnv";
 
 export const PrivateEnvSchema = z
 	.object({
@@ -19,6 +19,7 @@ export const PrivateEnvSchema = z
 		GOOGLE_CLIENT_SECRET: z
 			.string()
 			.default(process.env.GOOGLE_CLIENT_SECRET as string),
+		REDIS_URL: z.string().default(process.env.REDIS_URL as string),
 	})
 	.merge(PublicEnvSchema);
 
