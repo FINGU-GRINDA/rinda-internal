@@ -11,7 +11,7 @@ function PreSearchContent() {
 		<>
 			<Sidebar />
 			<Navbar />
-			<main className="ml-64 mt-16 min-h-screen bg-background">
+			<main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] bg-background">
 				<div className="p-6">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 						<SearchResultsTable />

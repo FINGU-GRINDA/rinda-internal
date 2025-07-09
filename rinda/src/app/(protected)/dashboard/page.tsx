@@ -39,7 +39,7 @@ export default function Page() {
 		<>
 			<Sidebar />
 			<Navbar />
-			<main className="ml-64 mt-16 min-h-screen bg-background">
+			<main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] bg-background">
 				<div className="container mx-auto px-6 py-12">
 					<SearchBar />
 
