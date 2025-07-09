@@ -1,0 +1,31 @@
+@keyframes rainbowGradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+.rainbowText {
+	background: linear-gradient(
+		90deg,
+		#ffb3ba,
+		#ffd4a3,
+		#ffffba,
+		#baffc9,
+		#bae1ff,
+		#d4baff,
+		#ffbaf3,
+		#ffb3ba
+	);
+	background-size: 200% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: rainbowGradient 3s ease infinite;
+	display: inline-block;
+}

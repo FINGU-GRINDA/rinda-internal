@@ -2,12 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Search } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { WebsetListSkeleton } from "@/components/webset-list-skeleton";
 import { orpc } from "@/lib/orpc";
+import styles from "./sidebar.module.css";
 
 export function Sidebar() {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -42,10 +44,15 @@ export function Sidebar() {
 		<aside className="fixed left-0 top-0 h-screen w-64 border-r bg-background p-4 flex flex-col">
 			<div className="mb-6">
 				<div className="flex items-center gap-2 mb-4">
-					<div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-						<span className="text-primary-foreground font-bold text-sm">W</span>
-					</div>
-					<h2 className="text-lg font-semibold">Websets</h2>
+					<Link
+						href="/dashboard"
+						className="w-8 h-8 bg-primary rounded flex items-center justify-center transition-opacity hover:opacity-80"
+					>
+						<span className="text-primary-foreground font-bold text-sm">R</span>
+					</Link>
+					<h2 className="text-lg font-semibold">
+						<span className={styles.rainbowText}>Rinda Internal</span>
+					</h2>
 				</div>
 
 				<div className="space-y-2">
