@@ -1,29 +1,34 @@
 import { createORPCClient } from "@orpc/client";
-import type { ContractRouterClient } from "@orpc/contract";
-import type { JsonifiedClient } from "@orpc/openapi-client";
-import { OpenAPILink } from "@orpc/openapi-client/fetch";
+import { RPCLink } from "@orpc/client/fetch";
+import { BatchLinkPlugin } from "@orpc/client/plugins";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { contract } from "@/contracts";
 import type { router } from "@/router";
 
+/**
+ * This is part of the Optimize SSR setup.
+ *
+ * @see {@link https://orpc.unnoq.com/docs/adapters/next#optimize-ssr}
+ */
 declare global {
 	var $client: RouterClient<typeof router> | undefined;
 }
 
-const openapiLink = new OpenAPILink(contract, {
-	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/api/rpc`,
-	fetch: (
-		request,
-		init, // Override fetch if needed
-	) =>
-		globalThis.fetch(request, {
-			...init,
-			credentials: "include", // Include cookies for cross-origin requests
+const link = new RPCLink({
+	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/rpc`,
+	plugins: [
+		new BatchLinkPlugin({
+			groups: [
+				{
+					condition: () => true,
+					context: {},
+				},
+			],
 		}),
+	],
 });
 
-const client: JsonifiedClient<ContractRouterClient<typeof contract>> =
-	createORPCClient(openapiLink);
+export const client: RouterClient<typeof router> =
+	globalThis.$client ?? createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);

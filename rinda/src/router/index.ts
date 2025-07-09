@@ -1,14 +1,8 @@
-import { os } from "@/orpc";
-import { me, signin, signup } from "./auth";
+import { os } from "@orpc/server";
 import { peopleRouter } from "./people";
 import { websetRouter } from "./webset";
 
 export const router = os.router({
-	auth: {
-		me: me,
-		signup: signup,
-		signin: signin,
-	},
 	people: peopleRouter,
 	webset: websetRouter,
 });

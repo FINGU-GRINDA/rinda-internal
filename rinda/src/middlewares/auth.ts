@@ -1,3 +1,4 @@
+"use server";
 import { os } from "@orpc/server";
 import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { cookies, headers } from "next/headers";

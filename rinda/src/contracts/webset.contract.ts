@@ -11,68 +11,62 @@ const websetRowSchema = z.object({
 	websetId: z.string().nullable(),
 });
 
-export const create = oc
-	.route({
-		method: "POST",
-		path: "/webset",
-		summary: "Create",
-		tags: ["Webset"],
-	})
-	.input(
-		z.object({
-			query: z.string(),
-			validationCriterias: z.array(z.string()),
-			enrichmentCriterias: z.array(z.string()),
-			count: z.number().int().min(1).max(500).default(10),
-		}),
-	);
-
-export const liveQuery = oc
-	.route({
-		method: "POST",
-		path: "/webset/live-query",
-		summary: "Live query",
-		tags: ["Webset"],
-	})
-	.input(
-		z.object({
-			id: z.string(),
-		}),
-	)
-	.output(
-		eventIterator(
+export const websetContract = {
+	create: oc
+		.route({
+			method: "POST",
+			path: "/webset",
+			summary: "Create",
+			tags: ["Webset"],
+		})
+		.input(
 			z.object({
-				id: z.string(),
-				createdAt: z.date(),
-				updatedAt: z.date(),
-				searchQuery: z.string(),
+				query: z.string(),
 				validationCriterias: z.array(z.string()),
 				enrichmentCriterias: z.array(z.string()),
-				rows: z.array(websetRowSchema),
-				count: z.number(),
-				createdByUserId: z.string(),
+				count: z.number().int().min(1).max(500).default(10),
 			}),
 		),
-	);
-
-export const update = oc
-	.route({
-		method: "PATCH",
-		path: "/webset",
-		summary: "Update",
-		tags: ["Webset"],
-	})
-	.input(
-		z.object({
-			id: z.string(),
-			enrichmentCriterias: z.array(z.string()).optional(),
-			validationCriterias: z.array(z.string()).optional(),
-			count: z.number().int().min(1).max(500).default(10),
-		}),
-	);
-
-export const websetContract = {
-	create: create,
-	liveQuery: liveQuery,
-	update: update,
+	liveQuery: oc
+		.route({
+			method: "POST",
+			path: "/webset/live-query",
+			summary: "Live query",
+			tags: ["Webset"],
+		})
+		.input(
+			z.object({
+				id: z.string(),
+			}),
+		)
+		.output(
+			eventIterator(
+				z.object({
+					id: z.string(),
+					createdAt: z.date(),
+					updatedAt: z.date(),
+					searchQuery: z.string(),
+					validationCriterias: z.array(z.string()),
+					enrichmentCriterias: z.array(z.string()),
+					rows: z.array(websetRowSchema),
+					count: z.number(),
+					createdByUserId: z.string(),
+				}),
+			),
+		),
+	update: oc
+		.route({
+			method: "PATCH",
+			path: "/webset",
+			summary: "Update",
+			tags: ["Webset"],
+		})
+		.input(
+			z.object({
+				id: z.string(),
+				enrichmentCriterias: z.array(z.string()).optional(),
+				validationCriterias: z.array(z.string()).optional(),
+				count: z.number().int().min(1).max(500).default(10),
+			}),
+		),
 };

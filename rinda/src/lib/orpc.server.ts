@@ -4,11 +4,6 @@ import { createRouterClient } from "@orpc/server";
 import { headers } from "next/headers";
 import { router } from "@/router";
 
-/**
- * This is part of the Optimize SSR setup.
- *
- * @see {@link https://orpc.unnoq.com/docs/adapters/next#optimize-ssr}
- */
 globalThis.$client = createRouterClient(router, {
 	/**
 	 * Provide initial context if needed.

@@ -19,7 +19,7 @@ import { orpc } from "@/lib/orpc";
 export function SearchCriteriaBuilder() {
 	const [searchQuery, setSearchQuery] = useQuerySearchParams();
 	const { data: dataRequirements, isLoading: isLoadingRequirements } = useQuery(
-		orpc.people.createPreSearch.queryOptions({
+		orpc.people.createPresearch.queryOptions({
 			input: {
 				query: searchQuery.q,
 			},
