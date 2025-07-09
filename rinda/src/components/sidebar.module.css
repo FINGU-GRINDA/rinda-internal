@@ -26,6 +26,9 @@
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
-	animation: rainbowGradient 3s ease infinite;
+	animation: rainbowGradient 3s linear infinite;
+	animation-fill-mode: both;
+	animation-delay: 0s;
 	display: inline-block;
+	will-change: background-position;
 }

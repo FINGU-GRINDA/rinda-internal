@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { PulseLoader } from "react-spinners";
 import {
 	CriteriaEditor,
 	type CriteriaItem,
@@ -12,6 +11,7 @@ import {
 import { CriteriaTag } from "@/components/criteria-tag";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuerySearchParams } from "@/hooks/use-search-params";
 import { orpc } from "@/lib/orpc";
@@ -176,13 +176,13 @@ export function SearchCriteriaBuilder() {
 					{isLoadingRequirements &&
 					!!searchQuery.q &&
 					!searchQuery.hasProcessedApiData ? (
-						<div className="flex items-center justify-center py-8">
-							<div className="flex flex-col items-center gap-3">
-								<PulseLoader color="#6366f1" size={8} speedMultiplier={0.8} />
-								<p className="text-sm text-muted-foreground">
-									Generating search criteria...
-								</p>
-							</div>
+						<div className="space-y-2">
+							{Array.from({ length: 3 }, (_, i) => (
+								<div key={i.toString()} className="flex items-start gap-2">
+									<Skeleton className="h-8 w-32 rounded-full" />
+								</div>
+							))}
+							<Skeleton className="h-4 w-48 mt-3" />
 						</div>
 					) : (
 						<div className="space-y-2">
@@ -233,7 +233,7 @@ export function SearchCriteriaBuilder() {
 			>
 				{createWebsetMutation.isPending ? (
 					<div className="flex items-center gap-2">
-						<PulseLoader color="white" size={6} speedMultiplier={0.8} />
+						<div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
 						Creating Search...
 					</div>
 				) : (
