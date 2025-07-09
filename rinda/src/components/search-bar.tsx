@@ -1,15 +1,27 @@
 "use client";
 
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight, FileText, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import styles from "@/app/(protected)/dashboard/page.module.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useQuerySearchParams } from "@/hooks/use-search-params";
 
-export function SearchBar() {
+interface SearchBarProps {
+	onFocusChange?: (focused: boolean) => void;
+}
+
+export function SearchBar({ onFocusChange }: SearchBarProps = {}) {
 	const [searchQueryState, setSearchQueryState] = useQuerySearchParams();
 	const searchParams = useSearchParams();
+	const [isLoading, setIsLoading] = useState(false);
 
 	const category = searchQueryState.category;
 	const query = searchQueryState.q;
@@ -24,8 +36,15 @@ export function SearchBar() {
 	];
 
 	const handleSearch = async () => {
-		if (searchQueryState.q?.trim()) {
-			router.push(`/dashboard/pre-search?${searchParams.toString()}`);
+		if (searchQueryState.q?.trim() && !isLoading) {
+			setIsLoading(true);
+			try {
+				router.push(`/dashboard/pre-search?${searchParams.toString()}`);
+			} finally {
+				// Note: loading state will be reset when component unmounts due to navigation
+				// but adding timeout as fallback
+				setTimeout(() => setIsLoading(false), 100);
+			}
 		}
 	};
 
@@ -53,7 +72,7 @@ export function SearchBar() {
 							key={cat.id}
 							value={cat.id}
 							disabled={cat.disabled}
-							className="data-[state=active]:bg-green-600 data-[state=active]:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+							className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{cat.label}
 						</TabsTrigger>
@@ -78,21 +97,35 @@ export function SearchBar() {
 							});
 						}}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+						onFocus={() => onFocusChange?.(true)}
+						onBlur={() => onFocusChange?.(false)}
 						className="pr-12 h-12 text-base"
 					/>
 					<Button
 						size="icon"
 						className="absolute right-1 top-1 h-10 w-10"
 						onClick={handleSearch}
+						disabled={isLoading || !searchQueryState.q?.trim()}
 					>
-						<ArrowRight className="h-4 w-4" />
+						{isLoading ? (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						) : (
+							<ArrowRight className="h-4 w-4" />
+						)}
 					</Button>
 				</div>
 
-				<Button variant="outline" className="gap-2">
-					<FileText className="h-4 w-4" />
-					Start from CSV
-				</Button>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button variant="outline" className="gap-2" disabled>
+							<FileText className="h-4 w-4" />
+							Start from CSV
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						<p>Coming soon</p>
+					</TooltipContent>
+				</Tooltip>
 			</div>
 		</div>
 	);

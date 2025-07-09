@@ -1,61 +1,33 @@
 "use client";
 
-import { FileText, Search, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { SearchBar } from "@/components/search-bar";
 import { Sidebar } from "@/components/sidebar";
-import { WorkflowCard } from "@/components/workflow-card";
-
-const workflows = [
-	{
-		title: "Sales",
-		subtitle: "Find customers",
-		description: "Source the perfect companies and people to sell to",
-		icon: TrendingUp,
-	},
-	{
-		title: "Market research",
-		subtitle: "Analyze competitors",
-		description: "Find competitors and know everything about them",
-		icon: Search,
-	},
-	{
-		title: "Recruiting",
-		subtitle: "Source talent",
-		description: "Find the exact profiles you need for your business",
-		icon: Users,
-	},
-	{
-		title: "Academic research",
-		subtitle: "Find research papers",
-		description:
-			"Search for papers on a topic with summaries, citations, and more",
-		icon: FileText,
-	},
-];
+import styles from "./page.module.css";
 
 export default function Page() {
+	const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+	const handleFocusChange = (focused: boolean) => {
+		setIsSearchFocused(focused);
+	};
+
 	return (
 		<>
 			<Sidebar />
 			<Navbar />
-			<main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] bg-background">
-				<div className="container mx-auto px-6 py-12">
-					<SearchBar />
-
-					<div className="mt-16">
-						<h2 className="text-xl font-semibold mb-6">Workflows</h2>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-							{workflows.map((workflow) => (
-								<WorkflowCard
-									key={workflow.title}
-									title={workflow.title}
-									subtitle={workflow.subtitle}
-									description={workflow.description}
-									icon={workflow.icon}
-								/>
-							))}
-						</div>
+			<main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center relative">
+				<div className={styles.bloomContainer}>
+					<div
+						className={`${styles.bloomEffect} ${
+							isSearchFocused ? styles.focused : styles.unfocused
+						}`}
+					/>
+				</div>
+				<div className="container mx-auto px-6 py-12 flex items-center justify-center min-h-full relative z-10">
+					<div className="w-full">
+						<SearchBar onFocusChange={handleFocusChange} />
 					</div>
 				</div>
 			</main>

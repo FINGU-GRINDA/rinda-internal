@@ -4,9 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, Clock, ExternalLink, User, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnSelector } from "@/components/column-selector";
+import { PartialLoadingSkeleton } from "@/components/partial-loading-skeleton";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { orpc } from "@/lib/orpc";
 import type { ValidationStatus } from "../../generated/prisma";
 
@@ -45,6 +52,38 @@ const getFieldLabel = (fieldName: string): string => {
 	);
 };
 
+const TruncatedText = ({
+	text,
+	className = "text-sm",
+}: {
+	text: string;
+	className?: string;
+}) => {
+	if (!text) {
+		return <span className={className}>{text}</span>;
+	}
+
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<span
+					className={`${className} block truncate cursor-help`}
+					style={{
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						whiteSpace: "nowrap",
+					}}
+				>
+					{text}
+				</span>
+			</TooltipTrigger>
+			<TooltipContent side="top" sideOffset={8}>
+				<p className="max-w-xs break-words">{text}</p>
+			</TooltipContent>
+		</Tooltip>
+	);
+};
+
 const formatFieldValue = (
 	value: unknown,
 	fieldName: string,
@@ -54,32 +93,52 @@ const formatFieldValue = (
 	}
 
 	if (Array.isArray(value)) {
+		const displayItems = value.slice(0, 2);
+		const hasMore = value.length > 2;
+
 		return (
-			<div className="flex flex-wrap gap-1">
-				{value.slice(0, 3).map((item, index) => (
-					<Badge
-						key={`${fieldName}-${index}-${item}`}
-						variant="outline"
-						className="text-xs"
-					>
-						{String(item)}
-					</Badge>
-				))}
-				{value.length > 3 && (
-					<Badge variant="outline" className="text-xs">
-						+{value.length - 3} more
-					</Badge>
-				)}
-			</div>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<div className="flex items-center gap-1 cursor-help">
+						{displayItems.map((item, index) => (
+							<Badge
+								key={`${fieldName}-${index}-${item}`}
+								variant="outline"
+								className="text-xs"
+							>
+								{String(item)}
+							</Badge>
+						))}
+						{hasMore && (
+							<Badge variant="outline" className="text-xs">
+								+{value.length - 2}
+							</Badge>
+						)}
+					</div>
+				</TooltipTrigger>
+				<TooltipContent side="top" sideOffset={8}>
+					<div className="max-w-xs">
+						<p className="font-medium mb-1">All items:</p>
+						<div className="flex flex-wrap gap-1">
+							{value.map((item, index) => (
+								<Badge
+									key={`tooltip-${fieldName}-${index}-${item}`}
+									variant="outline"
+									className="text-xs"
+								>
+									{String(item)}
+								</Badge>
+							))}
+						</div>
+					</div>
+				</TooltipContent>
+			</Tooltip>
 		);
 	}
 
 	if (typeof value === "object") {
-		return (
-			<span className="text-sm font-mono">
-				{JSON.stringify(value, null, 2).substring(0, 50)}...
-			</span>
-		);
+		const jsonString = JSON.stringify(value, null, 2);
+		return <TruncatedText text={jsonString} className="text-sm font-mono" />;
 	}
 
 	const stringValue = String(value);
@@ -94,26 +153,33 @@ const formatFieldValue = (
 				stringValue.startsWith("http") ? stringValue : `https://${stringValue}`,
 			);
 			return (
-				<Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-					<a
-						href={
-							stringValue.startsWith("http")
-								? stringValue
-								: `https://${stringValue}`
-						}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						<ExternalLink className="h-4 w-4" />
-					</a>
-				</Button>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+							<a
+								href={
+									stringValue.startsWith("http")
+										? stringValue
+										: `https://${stringValue}`
+								}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								<ExternalLink className="h-4 w-4" />
+							</a>
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent side="top" sideOffset={8}>
+						<p className="max-w-xs break-all">{stringValue}</p>
+					</TooltipContent>
+				</Tooltip>
 			);
 		} catch {
 			// Not a valid URL, display as text
 		}
 	}
 
-	return <span className="text-sm">{stringValue}</span>;
+	return <TruncatedText text={stringValue} />;
 };
 
 export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
@@ -350,6 +416,11 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 		);
 	}
 
+	// Check if webset is still processing (created recently and has no rows)
+	const isRecentlyCreated =
+		new Date().getTime() - new Date(webset.createdAt).getTime() < 2 * 60 * 1000; // 2 minutes
+	const isProcessing = isRecentlyCreated && webset.WebsetRows.length === 0;
+
 	const criteriaColors = [
 		"bg-purple-100 text-purple-800",
 		"bg-blue-100 text-blue-800",
@@ -393,171 +464,221 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 		}
 	};
 
+	// If processing, show the partial loading skeleton that includes the entire structure
+	if (isProcessing) {
+		return (
+			<TooltipProvider>
+				<PartialLoadingSkeleton
+					webset={webset}
+					selectedColumns={selectedColumns}
+				/>
+			</TooltipProvider>
+		);
+	}
+
 	return (
-		<div className="bg-background border rounded-lg overflow-hidden w-full h-full flex flex-col">
-			<div className="p-4 border-b flex-shrink-0">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-lg font-semibold">Search Results</h2>
-						<p className="text-sm text-muted-foreground mt-1">
-							Query: "{webset.searchQuery}"
-						</p>
-					</div>
-					<div className="flex items-center gap-4">
-						<ColumnSelector
-							availableFields={webset.WebsetRows}
-							selectedColumns={selectedColumns}
-							onColumnsChange={handleColumnsChange}
-							defaultColumns={allAvailableFields}
-						/>
-						<div className="text-right">
-							<p className="text-sm font-medium">
-								{webset.WebsetRows.length} results
-							</p>
-							<p className="text-xs text-muted-foreground">
-								Updated: {new Date(webset.updatedAt).toLocaleString()}
+		<TooltipProvider>
+			<div className="bg-background border rounded-lg overflow-hidden w-full h-full flex flex-col">
+				<div className="p-4 border-b flex-shrink-0">
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="text-lg font-semibold">Search Results</h2>
+							<p className="text-sm text-muted-foreground mt-1">
+								Query: "{webset.searchQuery}"
 							</p>
 						</div>
-					</div>
-				</div>
-
-				{webset.validationCriterias.length > 0 && (
-					<div className="mt-3">
-						<p className="text-sm font-medium mb-2">Validation Criteria:</p>
-						<div className="flex flex-wrap gap-1">
-							{webset.validationCriterias.map(
-								(criteria: string, index: number) => (
-									<Badge
-										key={criteria}
-										variant="secondary"
-										className={criteriaColors[index % criteriaColors.length]}
-									>
-										{criteria}
-									</Badge>
-								),
-							)}
+						<div className="flex items-center gap-4">
+							<ColumnSelector
+								availableFields={webset.WebsetRows}
+								selectedColumns={selectedColumns}
+								onColumnsChange={handleColumnsChange}
+								defaultColumns={allAvailableFields}
+							/>
+							<div className="text-right">
+								<p className="text-sm font-medium">
+									{webset.WebsetRows.length} results
+								</p>
+								<p className="text-xs text-muted-foreground">
+									Updated: {new Date(webset.updatedAt).toLocaleString()}
+								</p>
+							</div>
 						</div>
 					</div>
-				)}
-			</div>
 
-			{webset.WebsetRows.length === 0 ? (
-				<div className="text-center py-8 flex-1 flex items-center justify-center">
-					<div>
-						<User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-						<h3 className="text-lg font-medium mb-2">No results found</h3>
-						<p className="text-sm text-muted-foreground">
-							Your search didn't return any results. Try adjusting your
-							criteria.
-						</p>
-					</div>
-				</div>
-			) : (
-				<section
-					ref={scrollContainerRef}
-					aria-label="Scrollable table container"
-					className={`overflow-x-auto overflow-y-auto max-w-full flex-1 ${isPanning ? "cursor-grabbing select-none" : "cursor-grab"}`}
-					onMouseDown={handleMouseDown}
-					onMouseMove={handleMouseMove}
-					onMouseUp={handleMouseUp}
-					onMouseLeave={handleMouseLeave}
-					style={
-						{
-							userSelect: isPanning ? "none" : "auto",
-							WebkitUserSelect: isPanning ? "none" : "auto",
-							msUserSelect: isPanning ? "none" : "auto",
-							MozUserSelect: isPanning ? "none" : "auto",
-						} as React.CSSProperties
-					}
-				>
-					<table className="w-full min-w-[1200px] h-full">
-						<thead className="bg-muted/50 border-b sticky top-0">
-							<tr>
-								{selectedColumns.map((column) => (
-									<th
-										key={column}
-										className={`text-left p-3 font-medium cursor-move transition-all min-w-[150px] ${
-											draggedColumn === column ? "opacity-50" : ""
-										} ${
-											dragOverColumn === column
-												? "border-l-2 border-primary"
-												: ""
-										}`}
-										draggable
-										onDragStart={(e) => handleDragStart(e, column)}
-										onDragOver={handleDragOver}
-										onDragEnter={() => handleDragEnter(column)}
-										onDragLeave={handleDragLeave}
-										onDrop={(e) => handleDrop(e, column)}
-										onDragEnd={handleDragEnd}
-									>
-										{getFieldLabel(column)}
-									</th>
-								))}
-								{webset.validationCriterias.map((criteria: string) => (
-									<th
-										key={criteria}
-										className="text-left p-3 font-medium min-w-[100px] max-w-[150px]"
-									>
-										<div className="truncate" title={criteria}>
+					{webset.validationCriterias.length > 0 && (
+						<div className="mt-3">
+							<p className="text-sm font-medium mb-2">Validation Criteria:</p>
+							<div className="flex flex-wrap gap-1">
+								{webset.validationCriterias.map(
+									(criteria: string, index: number) => (
+										<Badge
+											key={criteria}
+											variant="secondary"
+											className={criteriaColors[index % criteriaColors.length]}
+										>
 											{criteria}
-										</div>
-									</th>
-								))}
-								<th className="text-left p-3 font-medium">Enrichment</th>
-							</tr>
-						</thead>
-						<tbody>
-							{webset.WebsetRows.map((row) => {
-								const person = row.originalData as PersonData;
+										</Badge>
+									),
+								)}
+							</div>
+						</div>
+					)}
+				</div>
 
-								return (
-									<tr key={row.id} className="border-b hover:bg-muted/30">
-										{selectedColumns.map((column) => {
-											const value = person?.[column];
-											return (
-												<td key={column} className="p-3 min-w-[150px]">
-													{formatFieldValue(value, column)}
-												</td>
-											);
-										})}
-										{webset.validationCriterias.map(
-											(criteria: string, index: number) => (
-												<td
-													key={`${row.id}-${criteria}-${index}`}
-													className="p-3 text-center"
-												>
-													{renderValidationStatus(row.validationData[index])}
-												</td>
-											),
-										)}
-										<td className="p-3">
-											<div className="flex flex-wrap gap-1">
-												{row.enrichmentData.map(
-													(enrichment: string, index: number) => (
-														<Badge
-															key={`${row.id}-enrichment-${index}`}
-															variant="outline"
-															className="text-xs"
-														>
-															{enrichment}
-														</Badge>
-													),
-												)}
-												{row.enrichmentData.length === 0 && (
+				{webset.WebsetRows.length === 0 ? (
+					<div className="text-center py-8 flex-1 flex items-center justify-center">
+						<div>
+							<User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+							<h3 className="text-lg font-medium mb-2">No results found</h3>
+							<p className="text-sm text-muted-foreground">
+								Your search didn't return any results. Try adjusting your
+								criteria.
+							</p>
+						</div>
+					</div>
+				) : (
+					<section
+						ref={scrollContainerRef}
+						aria-label="Scrollable table container"
+						className={`overflow-x-auto overflow-y-auto max-w-full flex-1 relative ${isPanning ? "cursor-grabbing select-none" : "cursor-grab"}`}
+						onMouseDown={handleMouseDown}
+						onMouseMove={handleMouseMove}
+						onMouseUp={handleMouseUp}
+						onMouseLeave={handleMouseLeave}
+						style={
+							{
+								userSelect: isPanning ? "none" : "auto",
+								WebkitUserSelect: isPanning ? "none" : "auto",
+								msUserSelect: isPanning ? "none" : "auto",
+								MozUserSelect: isPanning ? "none" : "auto",
+							} as React.CSSProperties
+						}
+					>
+						<table className="w-full min-w-[1200px] h-full">
+							<thead className="bg-muted/50 border-b sticky top-0">
+								<tr>
+									{selectedColumns.map((column) => (
+										<th
+											key={column}
+											className={`text-left p-3 font-medium cursor-move transition-all min-w-[150px] ${
+												draggedColumn === column ? "opacity-50" : ""
+											} ${
+												dragOverColumn === column
+													? "border-l-2 border-primary"
+													: ""
+											}`}
+											draggable
+											onDragStart={(e) => handleDragStart(e, column)}
+											onDragOver={handleDragOver}
+											onDragEnter={() => handleDragEnter(column)}
+											onDragLeave={handleDragLeave}
+											onDrop={(e) => handleDrop(e, column)}
+											onDragEnd={handleDragEnd}
+										>
+											{getFieldLabel(column)}
+										</th>
+									))}
+									{webset.validationCriterias.map((criteria: string) => (
+										<th
+											key={criteria}
+											className="text-left p-3 font-medium min-w-[100px] max-w-[150px]"
+										>
+											<div className="truncate" title={criteria}>
+												{criteria}
+											</div>
+										</th>
+									))}
+									<th className="text-left p-3 font-medium">Enrichment</th>
+								</tr>
+							</thead>
+							<tbody>
+								{webset.WebsetRows.map((row) => {
+									const person = row.originalData as PersonData;
+
+									return (
+										<tr
+											key={row.id}
+											className="border-b hover:bg-muted/30 h-12"
+										>
+											{selectedColumns.map((column) => {
+												const value = person?.[column];
+												return (
+													<td
+														key={column}
+														className="p-3 min-w-[150px] max-w-[200px] overflow-hidden"
+													>
+														{formatFieldValue(value, column)}
+													</td>
+												);
+											})}
+											{webset.validationCriterias.map(
+												(criteria: string, index: number) => (
+													<td
+														key={`${row.id}-${criteria}-${index}`}
+														className="p-3 text-center overflow-hidden"
+													>
+														{renderValidationStatus(row.validationData[index])}
+													</td>
+												),
+											)}
+											<td className="p-3 max-w-[200px] overflow-hidden">
+												{row.enrichmentData.length === 0 ? (
 													<span className="text-xs text-muted-foreground">
 														Pending
 													</span>
+												) : (
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<div className="flex items-center gap-1 cursor-help">
+																{row.enrichmentData
+																	.slice(0, 2)
+																	.map((enrichment: string, index: number) => (
+																		<Badge
+																			key={`${row.id}-enrichment-${index}`}
+																			variant="outline"
+																			className="text-xs"
+																		>
+																			{enrichment}
+																		</Badge>
+																	))}
+																{row.enrichmentData.length > 2 && (
+																	<Badge variant="outline" className="text-xs">
+																		+{row.enrichmentData.length - 2}
+																	</Badge>
+																)}
+															</div>
+														</TooltipTrigger>
+														<TooltipContent side="top" sideOffset={8}>
+															<div className="max-w-xs">
+																<p className="font-medium mb-1">
+																	All enrichments:
+																</p>
+																<div className="flex flex-wrap gap-1">
+																	{row.enrichmentData.map(
+																		(enrichment: string, index: number) => (
+																			<Badge
+																				key={`tooltip-${row.id}-enrichment-${index}`}
+																				variant="outline"
+																				className="text-xs"
+																			>
+																				{enrichment}
+																			</Badge>
+																		),
+																	)}
+																</div>
+															</div>
+														</TooltipContent>
+													</Tooltip>
 												)}
-											</div>
-										</td>
-									</tr>
-								);
-							})}
-						</tbody>
-					</table>
-				</section>
-			)}
-		</div>
+											</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
+					</section>
+				)}
+			</div>
+		</TooltipProvider>
 	);
 }

@@ -79,7 +79,7 @@ export function TableSkeleton({
 						{Array.from({ length: rows }, (_, rowIndex) => (
 							<tr
 								key={`skeleton-row-${rowIndex.toString()}`}
-								className="border-b"
+								className="border-b h-12"
 							>
 								{/* Data columns */}
 								{Array.from({ length: columns }, (_, colIndex) => {
@@ -89,7 +89,7 @@ export function TableSkeleton({
 									return (
 										<td
 											key={`skeleton-cell-r${rowIndex.toString()}-c${colIndex.toString()}`}
-											className="p-3"
+											className="p-3 min-w-[150px] max-w-[200px] overflow-hidden"
 										>
 											<Skeleton className="h-4" style={{ width }} />
 										</td>
@@ -100,7 +100,7 @@ export function TableSkeleton({
 									Array.from({ length: validationColumns }, (_, valIndex) => (
 										<td
 											key={`skeleton-validation-r${rowIndex.toString()}-v${valIndex.toString()}`}
-											className="p-3 text-center"
+											className="p-3 text-center overflow-hidden"
 										>
 											<div className="flex items-center justify-center gap-1">
 												<Skeleton className="h-4 w-4 rounded-full" />
@@ -109,8 +109,8 @@ export function TableSkeleton({
 										</td>
 									))}
 								{/* Enrichment column */}
-								<td className="p-3">
-									<Skeleton className="h-6 w-16 rounded-full" />
+								<td className="p-3 max-w-[200px] overflow-hidden">
+									<Skeleton className="h-5 w-16 rounded-full" />
 								</td>
 							</tr>
 						))}

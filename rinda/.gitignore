@@ -51,3 +51,8 @@ node_modules/
 /playwright/.cache/
 
 .mastra
+
+# Test credentials
+/tests/.credentials.json
+/tests/auth.json
+playwright/.auth/
