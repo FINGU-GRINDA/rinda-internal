@@ -10,7 +10,16 @@
     "type:check": "tsc --noEmit",
     "format": "npx @biomejs/biome check --write",
     "dev:mastra": "npx mastra dev --dir src/mastra",
-    "build:mastra": "npx mastra build --dir src/mastra"
+    "build:mastra": "npx mastra build --dir src/mastra",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:e2e:debug": "npx playwright test --debug",
+    "test:e2e:auth": "npx playwright test auth.spec.ts",
+    "test:e2e:webset": "npx playwright test webset*.spec.ts",
+    "test:e2e:codegen": "npx playwright codegen",
+    "test:e2e:report": "npx playwright show-report",
+    "pretest:e2e": "mkdir -p playwright/.auth"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",
