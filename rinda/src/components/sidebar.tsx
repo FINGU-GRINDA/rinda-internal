@@ -1,24 +1,41 @@
 "use client";
 
-import { ChevronRight, FolderPlus, Search } from "lucide-react";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, Loader2, Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-interface RecentSearch {
-	id: string;
-	title: string;
-	icon?: string;
-}
+import { orpc } from "@/lib/orpc";
 
 export function Sidebar() {
 	const [searchQuery, setSearchQuery] = useState("");
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const currentWebsetId = searchParams.get("websetId");
 
-	const recentSearches: RecentSearch[] = [
-		{ id: "1", title: "Hotdogs/sausages, cheese in..." },
-		{ id: "2", title: "Cheese purchasing, Manila or..." },
-		{ id: "3", title: "Haircare experience, sales gro..." },
-	];
+	const {
+		data: websets,
+		isLoading,
+		error,
+	} = useQuery(orpc.webset.readAll.queryOptions());
+
+	const filteredWebsets = useMemo(() => {
+		if (!websets) return [];
+		if (!searchQuery) return websets;
+
+		return websets.filter((webset) =>
+			webset.searchQuery.toLowerCase().includes(searchQuery.toLowerCase()),
+		);
+	}, [websets, searchQuery]);
+
+	const handleWebsetClick = (websetId: string) => {
+		router.push(`/dashboard/search?websetId=${websetId}`);
+	};
+
+	const handleNewSearch = () => {
+		router.push("/dashboard");
+	};
 
 	return (
 		<aside className="fixed left-0 top-0 h-screen w-64 border-r bg-background p-4 flex flex-col">
@@ -31,7 +48,11 @@ export function Sidebar() {
 				</div>
 
 				<div className="space-y-2">
-					<Button variant="ghost" className="w-full justify-start gap-2">
+					<Button
+						variant="ghost"
+						className="w-full justify-start gap-2 cursor-pointer"
+						onClick={handleNewSearch}
+					>
 						<Search className="h-4 w-4" />
 						New search
 					</Button>
@@ -45,38 +66,53 @@ export function Sidebar() {
 							className="pl-9"
 						/>
 					</div>
-
-					<Button variant="ghost" className="w-full justify-start gap-2">
-						<FolderPlus className="h-4 w-4" />
-						New folder
-					</Button>
 				</div>
 			</div>
 
 			<div className="flex-1 overflow-y-auto">
 				<h3 className="text-sm font-medium text-muted-foreground mb-3">
-					Recent Searches (Older)
+					Recent Searches
 				</h3>
 
-				<div className="space-y-1">
-					{recentSearches.map((search) => (
-						<Button
-							key={search.id}
-							variant="ghost"
-							className="w-full justify-start gap-2 text-left"
-						>
-							<ChevronRight className="h-3 w-3" />
-							<span className="truncate text-sm">{search.title}</span>
-						</Button>
-					))}
-				</div>
+				{isLoading ? (
+					<div className="flex items-center justify-center py-8">
+						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+					</div>
+				) : error ? (
+					<div className="text-sm text-destructive px-2">
+						Failed to load searches
+					</div>
+				) : filteredWebsets.length === 0 ? (
+					<div className="text-sm text-muted-foreground px-2">
+						{searchQuery ? "No searches found" : "No searches yet"}
+					</div>
+				) : (
+					<div className="space-y-1">
+						{filteredWebsets.map((webset) => (
+							<Button
+								key={webset.id}
+								variant={currentWebsetId === webset.id ? "secondary" : "ghost"}
+								className="w-full justify-start gap-2 text-left cursor-pointer hover:bg-accent"
+								onClick={() => handleWebsetClick(webset.id)}
+							>
+								<ChevronRight className="h-3 w-3 flex-shrink-0" />
+								<span className="truncate text-sm">{webset.searchQuery}</span>
+							</Button>
+						))}
+					</div>
+				)}
 			</div>
 
-			<div className="mt-4 pt-4 border-t">
-				<Button variant="ghost" className="w-full justify-start text-sm">
-					Load all
-				</Button>
-			</div>
+			{websets && websets.length > 10 && filteredWebsets.length === 10 && (
+				<div className="mt-4 pt-4 border-t">
+					<Button
+						variant="ghost"
+						className="w-full justify-start text-sm cursor-pointer"
+					>
+						Load all
+					</Button>
+				</div>
+			)}
 		</aside>
 	);
 }

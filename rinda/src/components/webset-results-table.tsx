@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Check, Clock, ExternalLink, User, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnSelector } from "@/components/column-selector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,6 +115,10 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 	const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
 	const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const [isPanning, setIsPanning] = useState(false);
+	const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+	const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
 
 	const {
 		data: webset,
@@ -224,6 +228,81 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 		setDragOverColumn(null);
 	};
 
+	// Pan-to-scroll handlers
+	const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+		// Only start panning if not clicking on interactive elements
+		const target = e.target as HTMLElement;
+		if (
+			target.tagName === "BUTTON" ||
+			target.tagName === "A" ||
+			target.closest("button") ||
+			target.closest("a") ||
+			target.closest("th[draggable]")
+		) {
+			return;
+		}
+
+		setIsPanning(true);
+		setPanStart({ x: e.clientX, y: e.clientY });
+		if (scrollContainerRef.current) {
+			setScrollStart({
+				x: scrollContainerRef.current.scrollLeft,
+				y: scrollContainerRef.current.scrollTop,
+			});
+		}
+		// Prevent text selection while dragging
+		e.preventDefault();
+	};
+
+	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+		if (!isPanning || !scrollContainerRef.current) return;
+
+		const deltaX = e.clientX - panStart.x;
+		const deltaY = e.clientY - panStart.y;
+
+		// Apply the scroll with the inverted delta (drag right = scroll left)
+		scrollContainerRef.current.scrollLeft = scrollStart.x - deltaX;
+		scrollContainerRef.current.scrollTop = scrollStart.y - deltaY;
+
+		// Prevent default to avoid text selection
+		e.preventDefault();
+	};
+
+	const handleMouseUp = () => {
+		setIsPanning(false);
+	};
+
+	const handleMouseLeave = () => {
+		setIsPanning(false);
+	};
+
+	// Add global mouse events to handle mouse up outside the container
+	useEffect(() => {
+		const handleGlobalMouseUp = () => {
+			setIsPanning(false);
+		};
+
+		const handleGlobalMouseMove = (e: MouseEvent) => {
+			if (!isPanning || !scrollContainerRef.current) return;
+
+			const deltaX = e.clientX - panStart.x;
+			const deltaY = e.clientY - panStart.y;
+
+			scrollContainerRef.current.scrollLeft = scrollStart.x - deltaX;
+			scrollContainerRef.current.scrollTop = scrollStart.y - deltaY;
+		};
+
+		if (isPanning) {
+			document.addEventListener("mouseup", handleGlobalMouseUp);
+			document.addEventListener("mousemove", handleGlobalMouseMove);
+		}
+
+		return () => {
+			document.removeEventListener("mouseup", handleGlobalMouseUp);
+			document.removeEventListener("mousemove", handleGlobalMouseMove);
+		};
+	}, [isPanning, panStart, scrollStart]);
+
 	if (isLoading) {
 		return (
 			<div className="bg-background border rounded-lg p-6">
@@ -311,7 +390,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 	};
 
 	return (
-		<div className="bg-background border rounded-lg overflow-hidden">
+		<div className="bg-background border rounded-lg overflow-hidden w-full">
 			<div className="p-4 border-b">
 				<div className="flex items-center justify-between">
 					<div>
@@ -367,14 +446,28 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 					</p>
 				</div>
 			) : (
-				<div className="overflow-x-auto">
-					<table className="w-full min-w-[800px]">
+				<section
+					ref={scrollContainerRef}
+					aria-label="Scrollable table container"
+					className={`overflow-x-auto overflow-y-hidden max-w-full ${isPanning ? "cursor-grabbing select-none" : "cursor-grab"}`}
+					onMouseDown={handleMouseDown}
+					onMouseMove={handleMouseMove}
+					onMouseUp={handleMouseUp}
+					onMouseLeave={handleMouseLeave}
+					style={{
+						userSelect: isPanning ? "none" : "auto",
+						WebkitUserSelect: isPanning ? "none" : "auto",
+						msUserSelect: isPanning ? "none" : "auto",
+						MozUserSelect: isPanning ? "none" : "auto",
+					}}
+				>
+					<table className="w-full min-w-[1200px]">
 						<thead className="bg-muted/50 border-b">
 							<tr>
 								{selectedColumns.map((column) => (
 									<th
 										key={column}
-										className={`text-left p-3 font-medium cursor-move transition-all ${
+										className={`text-left p-3 font-medium cursor-move transition-all min-w-[150px] ${
 											draggedColumn === column ? "opacity-50" : ""
 										} ${
 											dragOverColumn === column
@@ -414,7 +507,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 										{selectedColumns.map((column) => {
 											const value = person?.[column];
 											return (
-												<td key={column} className="p-3">
+												<td key={column} className="p-3 min-w-[150px]">
 													{formatFieldValue(value, column)}
 												</td>
 											);
@@ -454,7 +547,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 							})}
 						</tbody>
 					</table>
-				</div>
+				</section>
 			)}
 		</div>
 	);

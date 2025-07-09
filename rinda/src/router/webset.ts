@@ -218,4 +218,23 @@ export const websetRouter = {
 			}
 			return result.result.criterias;
 		}),
+	readAll: os
+		.use(requiredAuthMiddleware)
+		.route({
+			method: "GET",
+			path: "/webset",
+			summary: "Read all",
+			tags: ["Webset"],
+		})
+		.handler(async (ctx) => {
+			const websets = await db.webset.findMany({
+				where: {
+					createdByuserId: ctx.context.user.id,
+				},
+				orderBy: {
+					createdAt: "desc",
+				},
+			});
+			return websets;
+		}),
 };
