@@ -26,6 +26,7 @@ export const UserSchema = oz.openapi(
 		id: z.string(),
 		name: z.string(),
 		email: z.string().email(),
+		image: z.string().optional(),
 	}),
 	{
 		examples: [
@@ -33,6 +34,7 @@ export const UserSchema = oz.openapi(
 				id: "1",
 				name: "John Doe",
 				email: "john@doe.com",
+				image: "https://example.com/profile.jpg",
 			},
 		],
 	},
