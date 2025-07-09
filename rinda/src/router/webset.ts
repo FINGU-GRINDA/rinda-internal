@@ -33,7 +33,7 @@ async function processWebsetInBackground(
 		// run webset query
 		const result = await qdrantClient.search("peoplev2", {
 			vector: embedding,
-			limit: input.count,
+			limit: 100,
 		});
 
 		const payloads = result.map((r) => r.payload);

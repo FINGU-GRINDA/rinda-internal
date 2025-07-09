@@ -13,6 +13,28 @@
 .rainbowText {
 	background: linear-gradient(
 		90deg,
+		#e91e63,
+		#ff5722,
+		#ff9800,
+		#4caf50,
+		#2196f3,
+		#9c27b0,
+		#e91e63
+	);
+	background-size: 200% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: rainbowGradient 3s linear infinite;
+	animation-fill-mode: both;
+	animation-delay: 0s;
+	display: inline-block;
+	will-change: background-position;
+}
+
+:global(html.dark) .rainbowText {
+	background: linear-gradient(
+		90deg,
 		#ffb3ba,
 		#ffd4a3,
 		#ffffba,
@@ -26,9 +48,4 @@
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
-	animation: rainbowGradient 3s linear infinite;
-	animation-fill-mode: both;
-	animation-delay: 0s;
-	display: inline-block;
-	will-change: background-position;
 }

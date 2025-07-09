@@ -30,11 +30,20 @@ const FIELD_GROUPS: Record<string, { label: string; fields: string[] }> = {
 		fields: [
 			"name",
 			"firstName",
+			"first_name",
 			"lastName",
+			"last_name",
 			"fullName",
+			"full_name",
 			"headline",
 			"summary",
 			"about",
+			"profileImage",
+			"profile_image",
+			"gender",
+			"birth_date",
+			"birth_year",
+			"age",
 		],
 	},
 	professional: {
@@ -43,10 +52,16 @@ const FIELD_GROUPS: Record<string, { label: string; fields: string[] }> = {
 			"position",
 			"title",
 			"jobTitle",
+			"job_title",
 			"currentPosition",
+			"current_position",
 			"experience",
+			"years_experience",
 			"skills",
 			"industry",
+			"sub_role",
+			"salary",
+			"inferred_salary",
 		],
 	},
 	company: {
@@ -54,10 +69,13 @@ const FIELD_GROUPS: Record<string, { label: string; fields: string[] }> = {
 		fields: [
 			"company",
 			"currentCompany",
+			"current_company",
 			"employer",
 			"organization",
 			"companySize",
+			"company_size",
 			"companyType",
+			"company_type",
 		],
 	},
 	location: {
@@ -70,7 +88,15 @@ const FIELD_GROUPS: Record<string, { label: string; fields: string[] }> = {
 			"region",
 			"address",
 			"geoLocation",
+			"geo_location",
+			"location_country",
+			"location_continent",
+			"countries",
 		],
+	},
+	contact: {
+		label: "Contact Information",
+		fields: ["email", "emails", "phone", "mobile", "phone_numbers", "contact"],
 	},
 	social: {
 		label: "Social Media & Links",
@@ -78,10 +104,11 @@ const FIELD_GROUPS: Record<string, { label: string; fields: string[] }> = {
 			"linkedinUrl",
 			"linkedin_url",
 			"profileUrl",
+			"profile_url",
 			"website",
 			"twitter",
 			"github",
-			"email",
+			"linkedin_connections",
 		],
 	},
 	other: {
@@ -110,6 +137,7 @@ const getFieldLabel = (fieldName: string): string => {
 	return (
 		FIELD_LABELS[fieldName] ||
 		fieldName
+			.replace(/_/g, " ")
 			.replace(/([A-Z])/g, " $1")
 			.replace(/^./, (str) => str.toUpperCase())
 			.trim()
@@ -154,6 +182,8 @@ export function ColumnSelector({
 		// Categorize known fields
 		allAvailableFields.forEach((field) => {
 			let foundCategory = false;
+
+			// First, check if field is in predefined groups
 			for (const [groupKey, group] of Object.entries(FIELD_GROUPS)) {
 				if (group.fields.includes(field)) {
 					categorized[groupKey].push(field);
@@ -161,6 +191,77 @@ export function ColumnSelector({
 					break;
 				}
 			}
+
+			// If not found in predefined groups, check for keyword-based categorization
+			if (!foundCategory) {
+				const fieldLower = field.toLowerCase();
+
+				// Personal information keywords
+				if (
+					fieldLower.includes("gender") ||
+					fieldLower.includes("birth") ||
+					fieldLower.includes("age") ||
+					(fieldLower.includes("name") && !fieldLower.includes("company"))
+				) {
+					categorized.personal.push(field);
+					foundCategory = true;
+				}
+				// Professional information keywords
+				else if (
+					fieldLower.includes("salary") ||
+					fieldLower.includes("experience") ||
+					fieldLower.includes("role") ||
+					fieldLower.includes("skill") ||
+					fieldLower.includes("industry") ||
+					fieldLower.includes("years")
+				) {
+					categorized.professional.push(field);
+					foundCategory = true;
+				}
+				// Company information keywords
+				else if (fieldLower.includes("company")) {
+					categorized.company.push(field);
+					foundCategory = true;
+				}
+				// Location information keywords
+				else if (
+					fieldLower.includes("location") ||
+					fieldLower.includes("country") ||
+					fieldLower.includes("continent") ||
+					fieldLower.includes("address") ||
+					fieldLower.includes("postal") ||
+					fieldLower.includes("city") ||
+					fieldLower.includes("state")
+				) {
+					categorized.location.push(field);
+					foundCategory = true;
+				}
+				// Contact information keywords
+				else if (
+					fieldLower.includes("email") ||
+					fieldLower.includes("phone") ||
+					fieldLower.includes("mobile") ||
+					fieldLower.includes("contact")
+				) {
+					categorized.contact.push(field);
+					foundCategory = true;
+				}
+				// Social media & links keywords
+				else if (
+					fieldLower.includes("url") ||
+					fieldLower.includes("linkedin") ||
+					fieldLower.includes("twitter") ||
+					fieldLower.includes("facebook") ||
+					fieldLower.includes("github") ||
+					fieldLower.includes("instagram") ||
+					fieldLower.includes("social")
+				) {
+					categorized.social.push(field);
+					foundCategory = true;
+				}
+			}
+
+			// If still not categorized, put in other
 			if (!foundCategory) {
 				categorized.other.push(field);
 			}

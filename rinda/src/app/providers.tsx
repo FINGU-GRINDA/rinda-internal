@@ -12,14 +12,16 @@ export function Providers(props: { children: React.ReactNode }) {
 	return (
 		<NuqsAdapter>
 			<QueryClientProvider client={queryClient}>
-				<ThemeProvider
-					attribute="class"
-					defaultTheme="system"
-					enableSystem
-					disableTransitionOnChange
-				>
-					{props.children}
-				</ThemeProvider>
+				<div suppressHydrationWarning>
+					<ThemeProvider
+						attribute="class"
+						defaultTheme="system"
+						enableSystem
+						disableTransitionOnChange
+					>
+						{props.children}
+					</ThemeProvider>
+				</div>
 			</QueryClientProvider>
 		</NuqsAdapter>
 	);
