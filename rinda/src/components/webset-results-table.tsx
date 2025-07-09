@@ -38,6 +38,7 @@ const getFieldLabel = (fieldName: string): string => {
 	return (
 		FIELD_LABELS[fieldName] ||
 		fieldName
+			.replace(/_/g, " ")
 			.replace(/([A-Z])/g, " $1")
 			.replace(/^./, (str) => str.toUpperCase())
 			.trim()
@@ -393,8 +394,8 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 	};
 
 	return (
-		<div className="bg-background border rounded-lg overflow-hidden w-full">
-			<div className="p-4 border-b">
+		<div className="bg-background border rounded-lg overflow-hidden w-full h-full flex flex-col">
+			<div className="p-4 border-b flex-shrink-0">
 				<div className="flex items-center justify-between">
 					<div>
 						<h2 className="text-lg font-semibold">Search Results</h2>
@@ -441,18 +442,21 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 			</div>
 
 			{webset.WebsetRows.length === 0 ? (
-				<div className="text-center py-8">
-					<User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-					<h3 className="text-lg font-medium mb-2">No results found</h3>
-					<p className="text-sm text-muted-foreground">
-						Your search didn't return any results. Try adjusting your criteria.
-					</p>
+				<div className="text-center py-8 flex-1 flex items-center justify-center">
+					<div>
+						<User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+						<h3 className="text-lg font-medium mb-2">No results found</h3>
+						<p className="text-sm text-muted-foreground">
+							Your search didn't return any results. Try adjusting your
+							criteria.
+						</p>
+					</div>
 				</div>
 			) : (
 				<section
 					ref={scrollContainerRef}
 					aria-label="Scrollable table container"
-					className={`overflow-x-auto overflow-y-hidden max-w-full ${isPanning ? "cursor-grabbing select-none" : "cursor-grab"}`}
+					className={`overflow-x-auto overflow-y-auto max-w-full flex-1 ${isPanning ? "cursor-grabbing select-none" : "cursor-grab"}`}
 					onMouseDown={handleMouseDown}
 					onMouseMove={handleMouseMove}
 					onMouseUp={handleMouseUp}
@@ -466,8 +470,8 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 						} as React.CSSProperties
 					}
 				>
-					<table className="w-full min-w-[1200px]">
-						<thead className="bg-muted/50 border-b">
+					<table className="w-full min-w-[1200px] h-full">
+						<thead className="bg-muted/50 border-b sticky top-0">
 							<tr>
 								{selectedColumns.map((column) => (
 									<th

@@ -28,8 +28,8 @@ function SearchContent() {
 		<>
 			<Sidebar />
 			<Navbar />
-			<main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] bg-background">
-				<div className="p-6">
+			<main className="ml-64 mt-16 h-[calc(100vh-4rem)] bg-background">
+				<div className="p-6 h-full">
 					<WebsetResultsTable websetId={websetId} />
 				</div>
 			</main>

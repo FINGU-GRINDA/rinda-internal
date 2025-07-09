@@ -14,9 +14,9 @@ export function TableSkeleton({
 	validationColumns = 2,
 }: TableSkeletonProps) {
 	return (
-		<div className="bg-background border rounded-lg overflow-hidden w-full">
+		<div className="bg-background border rounded-lg overflow-hidden w-full h-full flex flex-col">
 			{/* Header skeleton */}
-			<div className="p-4 border-b">
+			<div className="p-4 border-b flex-shrink-0">
 				<div className="flex items-center justify-between">
 					<div>
 						<Skeleton className="h-6 w-32 mb-2" />
@@ -46,9 +46,9 @@ export function TableSkeleton({
 			</div>
 
 			{/* Table skeleton */}
-			<div className="overflow-x-auto">
-				<table className="w-full min-w-[1200px]">
-					<thead className="bg-muted/50 border-b">
+			<div className="overflow-x-auto overflow-y-auto flex-1">
+				<table className="w-full min-w-[1200px] h-full">
+					<thead className="bg-muted/50 border-b sticky top-0">
 						<tr>
 							{/* Column headers */}
 							{Array.from({ length: columns }, (_, i) => (
