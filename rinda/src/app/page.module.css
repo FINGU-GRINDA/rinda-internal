@@ -51,3 +51,19 @@
 .word3 {
 	animation-delay: 800ms, 1.8s;
 }
+
+@keyframes fadeIn {
+	0% {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fadeIn {
+	opacity: 0;
+	animation: fadeIn 0.8s ease-out forwards;
+}
