@@ -3,8 +3,8 @@ import { Agent } from "@mastra/core/agent";
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
 
-export const queryValidationAgent = new Agent({
-	name: "Query Validation Agent",
+export const validationCriteriaAgent = new Agent({
+	name: "Validation Criteria Agent",
 	instructions: `
 You are a query validation agent that breaks down search queries into specific, verifiable requirements.
 

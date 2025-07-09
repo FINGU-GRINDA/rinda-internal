@@ -2,6 +2,7 @@ import { eventIterator, ORPCError, os } from "@orpc/server";
 import type { InputJsonValue, JsonValue } from "@prisma/client/runtime/library";
 import z from "zod";
 import { db } from "@/lib/prisma";
+import { mastra } from "@/mastra";
 import { requiredAuthMiddleware } from "@/middlewares/auth";
 import { createQueryEmbedding, rerankDocuments } from "@/services/jina-service";
 import { getQdrantClient } from "@/services/qdrant-service";
@@ -144,21 +145,22 @@ export const websetRouter = {
 				({ document }) => document,
 			);
 
+			await db.websetRow.createMany({
+				data: rerankedPayloads.map((payload) => ({
+					websetId: webset.id,
+					originalData: payload as unknown as InputJsonValue,
+					validationData: [],
+					enrichmentData: [],
+				})),
+				skipDuplicates: true,
+			});
+
 			webset = await db.webset.update({
 				where: {
 					id: webset.id,
 				},
 				data: {
 					count: rerankedPayloads.length,
-					WebsetRows: {
-						createMany: {
-							data: rerankedPayloads.map((payload) => ({
-								websetId: webset.id,
-								originalData: payload as unknown as InputJsonValue,
-							})),
-							skipDuplicates: true,
-						},
-					},
 				},
 				include: {
 					WebsetRows: true,
@@ -167,7 +169,37 @@ export const websetRouter = {
 
 			await redis.publish(`webset:${webset.id}`, JSON.stringify(webset));
 
-			// rerank them
-			return webset;
+			// TODO: validate each webset row
+
+			for await (const websetRow of webset.WebsetRows) {
+			}
+		}),
+	createPresearch: os
+		.use(requiredAuthMiddleware)
+		.route({
+			method: "POST",
+			path: "/webset/create-pre-search",
+			summary: "Create pre-search",
+			tags: ["Webset"],
+		})
+		.input(
+			z.object({
+				query: z.string(),
+			}),
+		)
+		.output(z.array(z.string()))
+		.handler(async ({ input }) => {
+			const run = await mastra
+				.getWorkflow("generateValidationCriteriaWorkflow")
+				.createRunAsync();
+			const result = await run.start({
+				inputData: {
+					query: input.query,
+				},
+			});
+			if (result.status !== "success") {
+				throw new Error("Failed to create pre-search");
+			}
+			return result.result.criterias;
 		}),
 };

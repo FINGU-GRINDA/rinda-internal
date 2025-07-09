@@ -20,7 +20,7 @@ export const getRedis = async () => {
 	);
 };
 
-export const subscribe = async function* <T = any>(
+export const subscribe = async function* <T = unknown>(
 	channel: string,
 ): AsyncGenerator<T> {
 	const redis = await getRedis();

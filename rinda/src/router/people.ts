@@ -41,38 +41,4 @@ export const peopleRouter = {
 
 			return result;
 		}),
-	createPresearch: os
-		.use(requiredAuthMiddleware)
-		.route({
-			method: "POST",
-			path: "/people/create-pre-search",
-			summary: "Create pre-search",
-			tags: ["People"],
-		})
-		.input(
-			z.object({
-				query: z.string(),
-			}),
-		)
-		.output(z.array(z.string()))
-		.handler(async ({ input }) => {
-			const agent = mastra.getAgent("queryValidationAgent");
-			const run = await agent.generate(
-				[
-					{
-						role: "user",
-						content: input.query,
-					},
-				],
-				{
-					output: z
-						.object({
-							requirements: z.array(z.string()),
-						})
-						.describe("Requirements"),
-				},
-			);
-			const requirements = run.object.requirements;
-			return requirements;
-		}),
 };
