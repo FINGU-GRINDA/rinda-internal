@@ -1,8 +1,10 @@
 import { eventIterator, ORPCError, os } from "@orpc/server";
-import type { JsonValue } from "@prisma/client/runtime/library";
+import type { InputJsonValue, JsonValue } from "@prisma/client/runtime/library";
 import z from "zod";
 import { db } from "@/lib/prisma";
 import { requiredAuthMiddleware } from "@/middlewares/auth";
+import { createQueryEmbedding, rerankDocuments } from "@/services/jina-service";
+import { getQdrantClient } from "@/services/qdrant-service";
 import { getRedis, subscribe } from "@/services/redis-service";
 
 const websetRowSchema = z.object({
@@ -103,7 +105,7 @@ export const websetRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
-			const webset = await db.webset.create({
+			let webset = await db.webset.create({
 				data: {
 					searchQuery: input.query,
 					validationCriterias: input.validationCriterias,
@@ -120,7 +122,52 @@ export const websetRouter = {
 			const redis = await getRedis();
 			await redis.publish(`webset:${webset.id}`, JSON.stringify(webset));
 
+			// create embedding
+			const embedding = await createQueryEmbedding({ query: input.query });
+
+			const qdrantClient = await getQdrantClient();
 			// run webset query
+			const result = await qdrantClient.search("peoplev2", {
+				vector: embedding,
+				limit: input.count,
+			});
+
+			const payloads = result.map((r) => r.payload);
+
+			const rerankedPayloadsWithScore = await rerankDocuments({
+				query: input.query,
+				documents: payloads,
+				topN: input.count,
+			});
+
+			const rerankedPayloads = rerankedPayloadsWithScore.map(
+				({ document }) => document,
+			);
+
+			webset = await db.webset.update({
+				where: {
+					id: webset.id,
+				},
+				data: {
+					count: rerankedPayloads.length,
+					WebsetRows: {
+						createMany: {
+							data: rerankedPayloads.map((payload) => ({
+								websetId: webset.id,
+								originalData: payload as unknown as InputJsonValue,
+							})),
+							skipDuplicates: true,
+						},
+					},
+				},
+				include: {
+					WebsetRows: true,
+				},
+			});
+
+			await redis.publish(`webset:${webset.id}`, JSON.stringify(webset));
+
+			// rerank them
 			return webset;
 		}),
 };

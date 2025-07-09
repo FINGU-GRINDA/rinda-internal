@@ -100,3 +100,60 @@ export const createQueryEmbedding = async (params: {
 		},
 	);
 };
+
+const RerankResponseSchema = z.object({
+	model: z.string(),
+	usage: z.object({ total_tokens: z.number() }),
+	results: z.array(
+		z.object({
+			index: z.number(),
+			relevance_score: z.number(),
+		}),
+	),
+});
+
+export const rerankDocuments = async <T>(params: {
+	query: string;
+	documents: T[];
+	topN?: number;
+}): Promise<Array<{ document: T; score: number }>> => {
+	const data = {
+		model: "jina-reranker-m0",
+		query: params.query,
+		top_n: params.topN || 100,
+		documents: params.documents.map((doc) => ({ text: JSON.stringify(doc) })),
+		return_documents: false,
+	};
+
+	return pRetry(
+		async () => {
+			const response = await fetch("https://api.jina.ai/v1/rerank", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${envPrivate.JINA_API_KEY}`,
+				},
+				body: JSON.stringify(data),
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const result = await response.json();
+			const parsedResult = RerankResponseSchema.parse(result);
+
+			return parsedResult.results.map((result) => ({
+				document: params.documents[result.index],
+				score: result.relevance_score,
+			}));
+		},
+		{
+			onFailedAttempt: (error) => {
+				console.error(
+					`Attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`,
+				);
+			},
+		},
+	);
+};
