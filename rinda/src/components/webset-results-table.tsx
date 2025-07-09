@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Check, Clock, ExternalLink, User, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useMemo, useState } from "react";
+import { ColumnSelector } from "@/components/column-selector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { orpc } from "@/lib/orpc";
@@ -13,16 +14,108 @@ interface WebsetResultsTableProps {
 }
 
 interface PersonData {
-	name?: string;
-	position?: string;
-	company?: string;
-	linkedinUrl?: string;
-	profileImage?: string;
-	location?: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
+const FIELD_LABELS: Record<string, string> = {
+	linkedinUrl: "LinkedIn",
+	linkedin_url: "LinkedIn",
+	profileUrl: "Profile URL",
+	firstName: "First Name",
+	lastName: "Last Name",
+	fullName: "Full Name",
+	jobTitle: "Job Title",
+	currentPosition: "Current Position",
+	currentCompany: "Current Company",
+	companySize: "Company Size",
+	companyType: "Company Type",
+	geoLocation: "Geographic Location",
+	profileImage: "Profile Image",
+};
+
+const getFieldLabel = (fieldName: string): string => {
+	return (
+		FIELD_LABELS[fieldName] ||
+		fieldName
+			.replace(/([A-Z])/g, " $1")
+			.replace(/^./, (str) => str.toUpperCase())
+			.trim()
+	);
+};
+
+const formatFieldValue = (value: any, fieldName: string): React.ReactNode => {
+	if (value === null || value === undefined || value === "") {
+		return <span className="text-sm text-muted-foreground">N/A</span>;
+	}
+
+	if (Array.isArray(value)) {
+		return (
+			<div className="flex flex-wrap gap-1">
+				{value.slice(0, 3).map((item, index) => (
+					<Badge
+						key={`${fieldName}-${index}-${item}`}
+						variant="outline"
+						className="text-xs"
+					>
+						{String(item)}
+					</Badge>
+				))}
+				{value.length > 3 && (
+					<Badge variant="outline" className="text-xs">
+						+{value.length - 3} more
+					</Badge>
+				)}
+			</div>
+		);
+	}
+
+	if (typeof value === "object") {
+		return (
+			<span className="text-sm font-mono">
+				{JSON.stringify(value, null, 2).substring(0, 50)}...
+			</span>
+		);
+	}
+
+	const stringValue = String(value);
+
+	// Special handling for URLs
+	if (
+		fieldName.toLowerCase().includes("url") ||
+		fieldName.toLowerCase().includes("website")
+	) {
+		try {
+			new URL(
+				stringValue.startsWith("http") ? stringValue : `https://${stringValue}`,
+			);
+			return (
+				<Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+					<a
+						href={
+							stringValue.startsWith("http")
+								? stringValue
+								: `https://${stringValue}`
+						}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<ExternalLink className="h-4 w-4" />
+					</a>
+				</Button>
+			);
+		} catch {
+			// Not a valid URL, display as text
+		}
+	}
+
+	return <span className="text-sm">{stringValue}</span>;
+};
+
 export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
+	const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+	const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+
 	const {
 		data: webset,
 		isLoading,
@@ -32,6 +125,104 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 			input: { id: websetId },
 		}),
 	);
+
+	// Extract all available fields from the data
+	const allAvailableFields = useMemo(() => {
+		if (!webset?.WebsetRows) return [];
+		const fieldSet = new Set<string>();
+		webset.WebsetRows.forEach((row: any) => {
+			if (row.originalData && typeof row.originalData === "object") {
+				Object.keys(row.originalData).forEach((key) => fieldSet.add(key));
+			}
+		});
+		return Array.from(fieldSet).sort();
+	}, [webset]);
+
+	// Load saved columns and order from localStorage on mount or use all available fields
+	useEffect(() => {
+		if (websetId && allAvailableFields.length > 0) {
+			const savedState = localStorage.getItem(`webset-columns-${websetId}`);
+			if (savedState) {
+				try {
+					const parsed = JSON.parse(savedState);
+					// Handle both old format (array) and new format (object with columns array)
+					const columns = Array.isArray(parsed) ? parsed : parsed.columns || [];
+					// Only use saved columns that still exist in the data
+					const validColumns = columns.filter((col: string) =>
+						allAvailableFields.includes(col),
+					);
+					setSelectedColumns(
+						validColumns.length > 0 ? validColumns : allAvailableFields,
+					);
+				} catch {
+					setSelectedColumns(allAvailableFields);
+				}
+			} else {
+				// Default to showing all available fields
+				setSelectedColumns(allAvailableFields);
+			}
+		}
+	}, [websetId, allAvailableFields]);
+
+	// Save column selection and order to localStorage
+	const handleColumnsChange = (columns: string[]) => {
+		setSelectedColumns(columns);
+		localStorage.setItem(
+			`webset-columns-${websetId}`,
+			JSON.stringify({ columns }),
+		);
+	};
+
+	// Drag and drop handlers
+	const handleDragStart = (
+		e: React.DragEvent<HTMLTableCellElement>,
+		column: string,
+	) => {
+		setDraggedColumn(column);
+		e.dataTransfer.effectAllowed = "move";
+	};
+
+	const handleDragOver = (e: React.DragEvent<HTMLTableCellElement>) => {
+		e.preventDefault();
+		e.dataTransfer.dropEffect = "move";
+	};
+
+	const handleDragEnter = (column: string) => {
+		setDragOverColumn(column);
+	};
+
+	const handleDragLeave = () => {
+		setDragOverColumn(null);
+	};
+
+	const handleDrop = (
+		e: React.DragEvent<HTMLTableCellElement>,
+		targetColumn: string,
+	) => {
+		e.preventDefault();
+
+		if (draggedColumn && draggedColumn !== targetColumn) {
+			const newColumns = [...selectedColumns];
+			const draggedIndex = newColumns.indexOf(draggedColumn);
+			const targetIndex = newColumns.indexOf(targetColumn);
+
+			if (draggedIndex !== -1 && targetIndex !== -1) {
+				// Remove dragged column
+				newColumns.splice(draggedIndex, 1);
+				// Insert at new position
+				newColumns.splice(targetIndex, 0, draggedColumn);
+				handleColumnsChange(newColumns);
+			}
+		}
+
+		setDraggedColumn(null);
+		setDragOverColumn(null);
+	};
+
+	const handleDragEnd = () => {
+		setDraggedColumn(null);
+		setDragOverColumn(null);
+	};
 
 	if (isLoading) {
 		return (
@@ -129,13 +320,21 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 							Query: "{webset.searchQuery}"
 						</p>
 					</div>
-					<div className="text-right">
-						<p className="text-sm font-medium">
-							{webset.WebsetRows.length} results
-						</p>
-						<p className="text-xs text-muted-foreground">
-							Updated: {new Date(webset.updatedAt).toLocaleString()}
-						</p>
+					<div className="flex items-center gap-4">
+						<ColumnSelector
+							availableFields={webset.WebsetRows}
+							selectedColumns={selectedColumns}
+							onColumnsChange={handleColumnsChange}
+							defaultColumns={allAvailableFields}
+						/>
+						<div className="text-right">
+							<p className="text-sm font-medium">
+								{webset.WebsetRows.length} results
+							</p>
+							<p className="text-xs text-muted-foreground">
+								Updated: {new Date(webset.updatedAt).toLocaleString()}
+							</p>
+						</div>
 					</div>
 				</div>
 
@@ -172,11 +371,27 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 					<table className="w-full min-w-[800px]">
 						<thead className="bg-muted/50 border-b">
 							<tr>
-								<th className="text-left p-3 font-medium">Person</th>
-								<th className="text-left p-3 font-medium">Position</th>
-								<th className="text-left p-3 font-medium">Company</th>
-								<th className="text-left p-3 font-medium">Location</th>
-								<th className="text-left p-3 font-medium">LinkedIn</th>
+								{selectedColumns.map((column) => (
+									<th
+										key={column}
+										className={`text-left p-3 font-medium cursor-move transition-all ${
+											draggedColumn === column ? "opacity-50" : ""
+										} ${
+											dragOverColumn === column
+												? "border-l-2 border-primary"
+												: ""
+										}`}
+										draggable
+										onDragStart={(e) => handleDragStart(e, column)}
+										onDragOver={handleDragOver}
+										onDragEnter={() => handleDragEnter(column)}
+										onDragLeave={handleDragLeave}
+										onDrop={(e) => handleDrop(e, column)}
+										onDragEnd={handleDragEnd}
+									>
+										{getFieldLabel(column)}
+									</th>
+								))}
 								{webset.validationCriterias.map((criteria: string) => (
 									<th
 										key={criteria}
@@ -193,60 +408,17 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 						<tbody>
 							{webset.WebsetRows.map((row: any) => {
 								const person = row.originalData as PersonData;
-								const name = person?.name || "Unknown";
-								const position = person?.position || person?.title || "N/A";
-								const company = person?.company || "N/A";
-								const location = person?.location || "N/A";
-								const linkedinUrl = person?.linkedinUrl || person?.linkedin_url;
 
 								return (
 									<tr key={row.id} className="border-b hover:bg-muted/30">
-										<td className="p-3">
-											<div className="flex items-center gap-3">
-												<Avatar className="h-8 w-8">
-													<AvatarImage src={person?.profileImage} alt={name} />
-													<AvatarFallback>
-														{name
-															.split(" ")
-															.map((n) => n[0])
-															.join("")
-															.toUpperCase()}
-													</AvatarFallback>
-												</Avatar>
-												<span className="font-medium">{name}</span>
-											</div>
-										</td>
-										<td className="p-3">
-											<span className="text-sm">{position}</span>
-										</td>
-										<td className="p-3">
-											<span className="text-sm">{company}</span>
-										</td>
-										<td className="p-3">
-											<span className="text-sm">{location}</span>
-										</td>
-										<td className="p-3">
-											{linkedinUrl ? (
-												<Button
-													variant="ghost"
-													size="sm"
-													className="h-8 w-8 p-0"
-													asChild
-												>
-													<a
-														href={`https://${linkedinUrl}`}
-														target="_blank"
-														rel="noopener noreferrer"
-													>
-														<ExternalLink className="h-4 w-4" />
-													</a>
-												</Button>
-											) : (
-												<span className="text-sm text-muted-foreground">
-													N/A
-												</span>
-											)}
-										</td>
+										{selectedColumns.map((column) => {
+											const value = person?.[column];
+											return (
+												<td key={column} className="p-3">
+													{formatFieldValue(value, column)}
+												</td>
+											);
+										})}
 										{webset.validationCriterias.map(
 											(criteria: string, index: number) => (
 												<td

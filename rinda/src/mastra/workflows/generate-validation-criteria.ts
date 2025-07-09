@@ -16,7 +16,7 @@ const generateValidationCriteria = createStep({
 			[
 				{
 					role: "user",
-					content: "Generate a validation criteria for a search query.",
+					content: ctx.inputData.query,
 				},
 			],
 			{ output: z.object({ criterias: z.array(z.string()) }) },
