@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Check, Clock, ExternalLink, User, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnSelector } from "@/components/column-selector";
+import { TableSkeleton } from "@/components/table-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { orpc } from "@/lib/orpc";
-import { getQueryClient } from "@/lib/query/hydration";
 import type { ValidationStatus } from "../../generated/prisma";
 
 interface WebsetResultsTableProps {
@@ -44,7 +44,10 @@ const getFieldLabel = (fieldName: string): string => {
 	);
 };
 
-const formatFieldValue = (value: any, fieldName: string): React.ReactNode => {
+const formatFieldValue = (
+	value: unknown,
+	fieldName: string,
+): React.ReactNode => {
 	if (value === null || value === undefined || value === "") {
 		return <span className="text-sm text-muted-foreground">N/A</span>;
 	}
@@ -136,7 +139,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 	const allAvailableFields = useMemo(() => {
 		if (!webset?.WebsetRows) return [];
 		const fieldSet = new Set<string>();
-		webset.WebsetRows.forEach((row: any) => {
+		webset.WebsetRows.forEach((row) => {
 			if (row.originalData && typeof row.originalData === "object") {
 				Object.keys(row.originalData).forEach((key) => fieldSet.add(key));
 			}
@@ -306,18 +309,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 	}, [isPanning, panStart, scrollStart]);
 
 	if (isLoading) {
-		return (
-			<div className="bg-background border rounded-lg p-6">
-				<div className="flex items-center justify-center py-8">
-					<div className="flex flex-col items-center gap-3">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-						<p className="text-sm text-muted-foreground">
-							Loading search results...
-						</p>
-					</div>
-				</div>
-			</div>
-		);
+		return <TableSkeleton />;
 	}
 
 	if (error && !isLoading) {
@@ -327,18 +319,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 			(error.name === "CancelledError" || error.name === "AbortError")
 		) {
 			// Show loading state when query is cancelled
-			return (
-				<div className="bg-background border rounded-lg p-6">
-					<div className="flex items-center justify-center py-8">
-						<div className="flex flex-col items-center gap-3">
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-							<p className="text-sm text-muted-foreground">
-								Loading search results...
-							</p>
-						</div>
-					</div>
-				</div>
-			);
+			return <TableSkeleton />;
 		}
 
 		return (
@@ -523,7 +504,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 							</tr>
 						</thead>
 						<tbody>
-							{webset.WebsetRows.map((row: any) => {
+							{webset.WebsetRows.map((row) => {
 								const person = row.originalData as PersonData;
 
 								return (

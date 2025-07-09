@@ -155,7 +155,7 @@ export const websetRouter = {
 				count: z.number().int().min(1).max(500).default(10),
 			}),
 		)
-		.handler(async ({ input }) => {
+		.handler(async ({ input: _input }) => {
 			throw new ORPCError("Not implemented");
 		}),
 	create: os

@@ -107,4 +107,6 @@ model WebsetRow {
 
   Webset   Webset? @relation(fields: [websetId], references: [id], onDelete: Cascade)
   websetId String?
+
+  @@index([websetId])
 }

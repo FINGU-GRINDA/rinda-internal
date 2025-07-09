@@ -1,11 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Loader2, Search } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WebsetListSkeleton } from "@/components/webset-list-skeleton";
 import { orpc } from "@/lib/orpc";
 
 export function Sidebar() {
@@ -75,9 +76,7 @@ export function Sidebar() {
 				</h3>
 
 				{isLoading ? (
-					<div className="flex items-center justify-center py-8">
-						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-					</div>
+					<WebsetListSkeleton />
 				) : error ? (
 					<div className="text-sm text-destructive px-2">
 						Failed to load searches

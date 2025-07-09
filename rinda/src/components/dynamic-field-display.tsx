@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface DynamicFieldDisplayProps {
-	data: Record<string, any>;
+	data: Record<string, unknown>;
 	excludeFields?: string[];
 }
 
@@ -100,7 +100,7 @@ const isUrl = (value: string): boolean => {
 	}
 };
 
-const formatFieldValue = (value: any): React.ReactNode => {
+const formatFieldValue = (value: unknown): React.ReactNode => {
 	if (value === null || value === undefined || value === "") {
 		return <span className="text-muted-foreground text-sm">N/A</span>;
 	}
@@ -167,10 +167,13 @@ const getFieldLabel = (fieldName: string): string => {
 };
 
 const categorizeFields = (
-	data: Record<string, any>,
+	data: Record<string, unknown>,
 	excludeFields: string[] = [],
 ) => {
-	const categorized: Record<string, Array<{ key: string; value: any }>> = {};
+	const categorized: Record<
+		string,
+		Array<{ key: string; value: unknown }>
+	> = {};
 	const usedFields = new Set<string>();
 
 	// Initialize all groups
@@ -189,7 +192,7 @@ const categorizeFields = (
 	});
 
 	// Add remaining fields to "other" category
-	Object.entries(data).forEach(([key, value]) => {
+	Object.entries(data).forEach(([key, value]: [string, unknown]) => {
 		if (!usedFields.has(key) && !excludeFields.includes(key)) {
 			categorized.other.push({ key, value });
 		}

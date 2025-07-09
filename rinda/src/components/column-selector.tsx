@@ -1,13 +1,24 @@
 "use client";
 
-import { Check, Columns, Search, X } from "lucide-react";
+import type { JsonValue } from "@prisma/client/runtime/library";
+import { Columns, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+interface WebsetRow {
+	id: string;
+	createdAt: Date;
+	updatedAt: Date;
+	originalData: JsonValue;
+	validationData: ("VALID" | "INVALID" | "PENDING")[];
+	enrichmentData: string[];
+	websetId: string | null;
+}
+
 interface ColumnSelectorProps {
-	availableFields: Record<string, any>[];
+	availableFields: WebsetRow[];
 	selectedColumns: string[];
 	onColumnsChange: (columns: string[]) => void;
 	defaultColumns: string[];
@@ -118,8 +129,14 @@ export function ColumnSelector({
 	const allAvailableFields = useMemo(() => {
 		const fieldSet = new Set<string>();
 		availableFields.forEach((row) => {
-			if (row.originalData && typeof row.originalData === "object") {
-				Object.keys(row.originalData).forEach((key) => fieldSet.add(key));
+			if (
+				row.originalData &&
+				typeof row.originalData === "object" &&
+				!Array.isArray(row.originalData)
+			) {
+				Object.keys(row.originalData as Record<string, unknown>).forEach(
+					(key) => fieldSet.add(key),
+				);
 			}
 		});
 		return Array.from(fieldSet);

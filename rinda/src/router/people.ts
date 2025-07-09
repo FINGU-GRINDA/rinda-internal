@@ -1,7 +1,6 @@
 import { os } from "@orpc/server";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import z from "zod";
-import { mastra } from "@/mastra";
 import { requiredAuthMiddleware } from "@/middlewares/auth";
 import { envPrivate } from "@/privateEnv";
 import { createQueryEmbedding } from "@/services/jina-service";
