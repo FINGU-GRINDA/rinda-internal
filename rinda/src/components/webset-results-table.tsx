@@ -234,7 +234,7 @@ export function WebsetResultsTable({ websetId }: WebsetResultsTableProps) {
 													asChild
 												>
 													<a
-														href={linkedinUrl}
+														href={`https://${linkedinUrl}`}
 														target="_blank"
 														rel="noopener noreferrer"
 													>

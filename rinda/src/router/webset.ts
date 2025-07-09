@@ -19,6 +19,68 @@ const websetRowSchema = z.object({
 	websetId: z.string().nullable(),
 });
 
+async function processWebsetInBackground(
+	websetId: string,
+	input: { query: string; validationCriterias: string[]; count: number },
+) {
+	try {
+		const redis = await getRedis();
+
+		// create embedding
+		const embedding = await createQueryEmbedding({ query: input.query });
+
+		const qdrantClient = await getQdrantClient();
+		// run webset query
+		const result = await qdrantClient.search("peoplev2", {
+			vector: embedding,
+			limit: input.count,
+		});
+
+		const payloads = result.map((r) => r.payload);
+
+		const rerankedPayloadsWithScore = await rerankDocuments({
+			query: input.query,
+			documents: payloads,
+			topN: input.count,
+		});
+
+		const rerankedPayloads = rerankedPayloadsWithScore.map(
+			({ document }) => document,
+		);
+
+		await db.websetRow.createMany({
+			data: rerankedPayloads.map((payload) => ({
+				websetId: websetId,
+				originalData: payload as unknown as InputJsonValue,
+				validationData: Array(input.validationCriterias.length).fill(
+					ValidationStatus.PENDING,
+				),
+			})),
+			skipDuplicates: true,
+		});
+
+		const webset = await db.webset.update({
+			where: {
+				id: websetId,
+			},
+			data: {
+				count: rerankedPayloads.length,
+			},
+			include: {
+				WebsetRows: true,
+			},
+		});
+
+		await redis.publish(`webset:${websetId}`, JSON.stringify(webset));
+
+		// TODO: validate each webset row
+		// for await (const websetRow of webset.WebsetRows) {
+		// }
+	} catch (error) {
+		console.error("Error processing webset in background:", error);
+	}
+}
+
 export const websetRouter = {
 	liveQuery: os
 		.use(requiredAuthMiddleware)
@@ -107,7 +169,7 @@ export const websetRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
-			let webset = await db.webset.create({
+			const webset = await db.webset.create({
 				data: {
 					searchQuery: input.query,
 					validationCriterias: input.validationCriterias,
@@ -119,62 +181,12 @@ export const websetRouter = {
 					WebsetRows: true,
 				},
 			});
-			// TODO: publish webset
-			// TODO: start webset query
+
 			const redis = await getRedis();
 			await redis.publish(`webset:${webset.id}`, JSON.stringify(webset));
 
-			// create embedding
-			const embedding = await createQueryEmbedding({ query: input.query });
-
-			const qdrantClient = await getQdrantClient();
-			// run webset query
-			const result = await qdrantClient.search("peoplev2", {
-				vector: embedding,
-				limit: input.count,
-			});
-
-			const payloads = result.map((r) => r.payload);
-
-			const rerankedPayloadsWithScore = await rerankDocuments({
-				query: input.query,
-				documents: payloads,
-				topN: input.count,
-			});
-
-			const rerankedPayloads = rerankedPayloadsWithScore.map(
-				({ document }) => document,
-			);
-
-			await db.websetRow.createMany({
-				data: rerankedPayloads.map((payload) => ({
-					websetId: webset.id,
-					originalData: payload as unknown as InputJsonValue,
-					validationData: Array(input.validationCriterias.length).fill(
-						ValidationStatus.PENDING,
-					),
-				})),
-				skipDuplicates: true,
-			});
-
-			webset = await db.webset.update({
-				where: {
-					id: webset.id,
-				},
-				data: {
-					count: rerankedPayloads.length,
-				},
-				include: {
-					WebsetRows: true,
-				},
-			});
-
-			await redis.publish(`webset:${webset.id}`, JSON.stringify(webset));
-
-			// TODO: validate each webset row
-
-			for await (const websetRow of webset.WebsetRows) {
-			}
+			// Run background processing without blocking response
+			processWebsetInBackground(webset.id, input).catch(console.error);
 
 			return webset;
 		}),
