@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import { ClipLoader } from "react-spinners";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
@@ -23,8 +23,10 @@ function WebsetContent({ websetId }: { websetId: string }) {
 export default function WebsetPage({
 	params,
 }: {
-	params: { websetId: string };
+	params: Promise<{ websetId: string }>;
 }) {
+	const { websetId } = use(params);
+
 	return (
 		<Suspense
 			fallback={
@@ -38,7 +40,7 @@ export default function WebsetPage({
 				</div>
 			}
 		>
-			<WebsetContent websetId={params.websetId} />
+			<WebsetContent websetId={websetId} />
 		</Suspense>
 	);
 }
