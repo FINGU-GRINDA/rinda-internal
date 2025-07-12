@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
 import { envPrivate } from "@/privateEnv";
 // If your Prisma file is located elsewhere, you can change the path
 import { PrismaClient } from "../../generated/prisma";
@@ -16,4 +17,5 @@ export const auth = betterAuth({
 			clientSecret: envPrivate.GOOGLE_CLIENT_SECRET as string,
 		},
 	},
+	plugins: [nextCookies()],
 });
