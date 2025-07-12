@@ -1,6 +1,5 @@
 import "../lib/orpc.server"; // for pre-rendering
 import "@/app/globals.css";
-export const runtime = "nodejs"; // 'nodejs' (default) | 'edge'
 
 import type { Metadata } from "next";
 
